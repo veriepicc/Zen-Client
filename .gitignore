@@ -1,32 +1,83 @@
-# Prerequisites
-*.d
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+*.opendb
+ipch/
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+*.log
+
+# Compiled objects / libraries
 *.obj
-
-# Precompiled Headers
-*.gch
+*.o
+*.lof
+*.lo
+*.idb
+*.pdb
+*.ipdb
+*.iobj
 *.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+*.exp
 *.lib
+*.ilk
 
-# Executables
+# Windows binaries
 *.exe
-*.out
-*.app
+*.dll
+*.com
+*.sys
+
+# C++ modules and MSBuild artifacts
+*.ifc
+*.d.json
+*.module.json
+*.tlog
+*.recipe
+*.lastbuildstate
+
+# Linker / intermediate
+*.map
+*.tmp
+*.temp
+
+# Project output directory
+Output/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# IDE settings
+.idea/
+*.iml
+.vscode/
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Crash dumps
+*.dmp
+
