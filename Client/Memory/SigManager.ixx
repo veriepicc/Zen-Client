@@ -20,8 +20,8 @@ public: \
 static inline void* Name; \
 private: \
 static inline std::function<void()> Name##Reg = ( \
-    initializers_.emplace_back( \
-        Memory::MakeSigInitializer(#Name, hat::compile_signature<Pattern>(), Offset, &Name, sigs_, ".text") \
+    initializers.emplace_back( \
+        Memory::MakeSigInitializer(#Name, hat::compile_signature<Pattern>(), Offset, &Name, sigs, ".text") \
     ), \
     std::function<void()>() \
 ); \
@@ -29,24 +29,24 @@ public:
 
 export class SigManager {
 private:
-    static inline std::vector<std::function<void()>> initializers_;
-    static inline std::unordered_map<std::string, std::uintptr_t> sigs_;
+    static inline std::vector<std::function<void()>> initializers;
+    static inline std::unordered_map<std::string, std::uintptr_t> sigs;
 
 public:
     static void initialize()
     {
-        for (const auto& init : initializers_) init();
+        for (const auto& init : initializers) init();
     }
 
     static void deinitialize()
     {
-        initializers_.clear();
-        sigs_.clear();
+        initializers.clear();
+        sigs.clear();
     }
 
     static const std::unordered_map<std::string, std::uintptr_t>& getSigs()
     {
-        return sigs_;
+        return sigs;
     }
 
     REGISTER_SIG(ContainerScreenController_onContainerSlotHovered,
