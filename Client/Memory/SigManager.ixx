@@ -11,9 +11,21 @@ module;
 
 export module SigManager;
 
-import Memory; // for Memory::ScanSignature and MakeSigInitializer
+import Memory;
 
 export enum class SigType { Sig, ReferenceSig };
+
+#define REGISTER_SIG(Name, Pattern, Type, Offset) \
+public: \
+static inline void* Name; \
+private: \
+static inline std::function<void()> Name##Reg = ( \
+    initializers_.emplace_back( \
+        Memory::MakeSigInitializer(#Name, hat::compile_signature<Pattern>(), Offset, &Name, sigs_, ".text") \
+    ), \
+    std::function<void()>() \
+); \
+public:
 
 export class SigManager {
 private:
@@ -37,23 +49,9 @@ public:
         return sigs_;
     }
 
-    // Signatures (declare without macros; implementation delegated to Memory)
-public:
-    static inline void* ContainerScreenController__onContainerSlotHovered;
-
-private:
-    static inline std::function<void()> ContainerScreenController__onContainerSlotHovered_reg = (
-        initializers_.emplace_back(
-            Memory::MakeSigInitializer(
-                "ContainerScreenController__onContainerSlotHovered",
-                hat::compile_signature<"48 89 ? ? ? 48 89 ? ? ? 41 ? 41 ? 41 ? 48 83 EC ? 45 33 ? 45 8B">(),
-                0,
-                &ContainerScreenController__onContainerSlotHovered,
-                sigs_,
-                ".text"
-            )
-        ),
-        std::function<void()>()
-    );
+    REGISTER_SIG(ContainerScreenController_onContainerSlotHovered,
+                 "48 89 ? ? ? 48 89 ? ? ? 41 ? 41 ? 41 ? 48 83 EC ? 45 33 ? 45 8B",
+                 SigType::Sig,
+                 0)
 };
 
