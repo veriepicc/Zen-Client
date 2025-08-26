@@ -99,6 +99,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -117,6 +118,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -142,6 +144,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,12 +157,13 @@
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;ZEN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -179,6 +183,50 @@
   <ItemGroup>
     <ClCompile Include="Client\dllmain.cpp" />
     <ClCompile Include="Client\Zen.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\Utils\Utils.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\SigManager.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\OffsetManager.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\Module\Module.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\Module\ModuleManager.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\Module\Combat\Killaura.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\Module\Visual\ClickGui.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\Module\Movement\Flight.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\Module\World\Xray.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\Module\Player\AutoSprint.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\Module\Misc\AutoGG.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAs>CompileAsCppModule</CompileAs>
     </ClCompile>

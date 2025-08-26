@@ -6,6 +6,8 @@ module;
 
 export module Zen;
 
+import ModuleManager;
+
 namespace Zen::Detail
 {
     inline void AllocateAndBindConsole()

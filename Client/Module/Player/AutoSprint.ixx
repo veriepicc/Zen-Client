@@ -1,0 +1,23 @@
+module;
+#include <string>
+
+export module AutoSprint;
+
+import Module;
+
+export class AutoSprint : public Module
+{
+public:
+    AutoSprint()
+        : Module("AutoSprint", "Automatically sprints when moving.", Category::Player)
+    {
+        addSetting(Settings::boolean("OnlyForward", true));
+    }
+
+    void onEnable() override {}
+    void onDisable() override {}
+    void onUpdate() override {}
+    void onRender() override {}
+};
+
+
