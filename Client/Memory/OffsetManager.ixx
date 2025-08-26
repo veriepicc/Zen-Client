@@ -13,11 +13,9 @@ export module OffsetManager;
 export class OffsetManager
 {
 public:
-    struct Entry { std::string name; std::uint32_t value; };
-
-    void set(std::string name, std::uint32_t value)
+    void set(std::string_view name, std::uint32_t value)
     {
-        offsets.emplace(std::move(name), value);
+        offsets[std::string(name)] = value;
     }
 
     std::optional<std::uint32_t> get(std::string_view name) const
@@ -32,29 +30,30 @@ public:
     }
 
     // Bulk setup helpers
-    void addStatic(std::string name, std::uint32_t value)
+    void addStatic(std::string_view name, std::uint32_t value)
     {
-        set(std::move(name), value);
+        set(name, value);
     }
 
-    bool addFromSig(std::string name, std::string_view idaPattern, std::string_view section = {})
+    bool addFromSig(std::string_view name, std::string_view idaPattern, std::string_view section = {})
     {
-        return setBySignature(std::move(name), idaPattern, section);
+        return setBySignature(name, idaPattern, section).has_value();
     }
 
     // Try to resolve and set an offset by signature (IDA-style string)
-    bool setBySignature(std::string name, std::string_view idaPattern, std::string_view section = {})
+    std::optional<std::uint32_t> setBySignature(std::string_view name, std::string_view idaPattern, std::string_view section = {})
     {
         const auto parsed = hat::parse_signature(idaPattern);
-        if (!parsed.has_value()) return false;
+        if (!parsed.has_value()) return std::nullopt;
 
         hat::scan_result res;
         if (section.empty()) res = hat::find_pattern(parsed.value());
         else                 res = hat::find_pattern(parsed.value(), section);
-        if (!res.has_result()) return false;
+        if (!res.has_result()) return std::nullopt;
 
-        set(std::move(name), static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(res.get())));
-        return true;
+        auto value = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(res.get()));
+        set(name, value);
+        return value;
     }
 
 private:

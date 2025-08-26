@@ -218,6 +218,10 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAs>CompileAsCppModule</CompileAs>
     </ClCompile>
+    <ClCompile Include="Client\Memory\Memory.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
     <ClCompile Include="Client\Module\Module.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAs>CompileAsCppModule</CompileAs>

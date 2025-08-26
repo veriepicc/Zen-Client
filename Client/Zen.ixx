@@ -8,6 +8,8 @@ module;
 export module Zen;
 
 import ModuleManager;
+import HookManager;
+import SigManager;
 // removed demo imports
 
 namespace Zen::Detail
@@ -40,6 +42,29 @@ export namespace Zen
         Detail::AllocateAndBindConsole();
         SetConsoleTitleW(L"Zen Client");
         Console();
+
+        // Initialize signature manager (DEFINE_SIG-based)
+        try {
+            SigManager::initialize();
+            std::cout << "[Zen] SigManager initialized" << std::endl;
+
+            const auto& sigs = SigManager::getSigs();
+            std::cout << "[Zen] Sigs count: " << sigs.size() << std::endl;
+            for (const auto& kv : sigs)
+            {
+                std::cout << "  - " << kv.first << " = 0x" << std::hex << kv.second << std::dec << std::endl;
+            }
+
+            std::cout << "[Zen] ContainerScreenController::_onContainerSlotHovered = 0x"
+                      << std::hex << reinterpret_cast<std::uintptr_t>(SigManager::ContainerScreenController__onContainerSlotHovered)
+                      << std::dec << std::endl;
+        } catch (...) {
+            std::cout << "[Zen] SigManager init failed" << std::endl;
+        }
+
+        // Demonstrate hook manager lifecycle (no-op until you register hooks)
+        auto& hm = GetHookManager();
+        hm.enableAll();
     }
 }
 

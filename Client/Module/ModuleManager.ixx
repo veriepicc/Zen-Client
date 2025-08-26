@@ -51,7 +51,7 @@ namespace Modules
 
             // World
             modules_.emplace_back(std::make_unique<Xray>());
-
+            
             // Player
             modules_.emplace_back(std::make_unique<AutoSprint>());
 
