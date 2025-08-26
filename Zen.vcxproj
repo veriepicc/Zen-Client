@@ -198,6 +198,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Client\dllmain.cpp" />
+    <ClCompile Include="Client\Memory\Hooks\Render\RenderHook.ixx" />
+    <ClCompile Include="Client\SDK\Render\HashedString.ixx" />
+    <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx" />
+    <ClCompile Include="Client\SDK\Render\TextHolder.ixx" />
+    <ClCompile Include="Client\Utils\Math.ixx" />
     <ClCompile Include="Client\Zen.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAs>CompileAsCppModule</CompileAs>
