@@ -31,9 +31,6 @@ export namespace Modules
     std::span<Module* const> All();
     std::span<Module* const> ByCategory(Category category);
     Module* Find(std::string_view name);
-
-    // Call this periodically to process keybinds and toggle/hold-enable modules
-    void PollKeybinds();
 }
 
 namespace Modules
@@ -108,11 +105,6 @@ namespace Modules
     inline Module* Find(std::string_view name)
     {
         return Instance().find(name);
-    }
-
-    inline void PollKeybinds()
-    {
-        Keybinds::poll(All());
     }
 }
 

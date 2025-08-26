@@ -3,10 +3,12 @@ module;
 #include <windows.h>
 #include <cstdio>
 #include <iostream>
+#include <iomanip>
 
 export module Zen;
 
 import ModuleManager;
+// removed demo imports
 
 namespace Zen::Detail
 {
@@ -28,6 +30,8 @@ export namespace Zen
 {
     inline void Console()
     {
+        std::cout.setf(std::ios::unitbuf);
+        std::cerr.setf(std::ios::unitbuf);
         std::cout << "Zen Client has been initialized!" << std::endl;
     }
 

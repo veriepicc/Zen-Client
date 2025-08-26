@@ -9,13 +9,8 @@ module;
 #include <functional>
 #include <array>
 #include <unordered_map>
-#include <unordered_set>
 #include <cstdint>
-#include <mutex>
 #include <span>
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 export module Module;
 
@@ -79,12 +74,6 @@ export namespace Settings
     }
 }
 
-export struct Keybind
-{
-    int vk { 0 }; // Virtual-Key code (Win32)
-    bool hold { false }; // If true, enable while held; otherwise toggle on press
-};
-
 export class Module
 {
 public:
@@ -137,13 +126,6 @@ public:
         }
         return nullptr;
     }
-    void setKeybind(Keybind kb)
-    {
-        keybind = kb;
-    }
-
-    Keybind keybindRef() const { return keybind; }
-
 private:
     std::string name;
     std::string description;
@@ -151,55 +133,5 @@ private:
     bool enabled { false };
     SettingList settings;
     std::unordered_map<std::string, std::size_t> settingIndex;
-    Keybind keybind {};
 };
-
-export namespace Keybinds
-{
-    void poll(std::span<Module* const> modules);
-}
-
-namespace Keybinds
-{
-    namespace detail
-    {
-        static std::mutex stateMutex;
-        static std::unordered_map<int, bool> downByVk;
-    }
-
-    inline void poll(std::span<Module* const> modules)
-    {
-        std::lock_guard<std::mutex> lock(detail::stateMutex);
-        std::unordered_set<int> usedKeys;
-        usedKeys.reserve(modules.size());
-
-        for (auto* mod : modules)
-        {
-            if (!mod) continue;
-            const Keybind kb = mod->keybindRef();
-            if (kb.vk <= 0) continue;
-            usedKeys.insert(kb.vk);
-
-            const bool isDown = (GetAsyncKeyState(kb.vk) & 0x8000) != 0;
-            const bool wasDown = detail::downByVk[kb.vk];
-
-            if (kb.hold)
-            {
-                mod->setEnabled(isDown);
-            }
-            else
-            {
-                if (isDown && !wasDown) mod->toggle();
-            }
-
-            detail::downByVk[kb.vk] = isDown;
-        }
-
-        for (auto it = detail::downByVk.begin(); it != detail::downByVk.end(); )
-        {
-            if (!usedKeys.contains(it->first)) it = detail::downByVk.erase(it);
-            else ++it;
-        }
-    }
-}
 
