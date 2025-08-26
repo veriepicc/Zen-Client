@@ -36,7 +36,6 @@ bld/
 *.iobj
 *.pch
 *.exp
-*.lib
 *.ilk
 
 # Windows binaries
