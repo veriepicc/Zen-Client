@@ -198,7 +198,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Client\dllmain.cpp" />
-    <ClCompile Include="Client\Memory\Hooks\Render\RenderHook.ixx" />
     <ClCompile Include="Client\SDK\Render\HashedString.ixx" />
     <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx" />
     <ClCompile Include="Client\SDK\Render\TextHolder.ixx" />

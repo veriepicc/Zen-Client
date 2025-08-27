@@ -105,10 +105,6 @@ public:
     virtual void drawRectangle(const float*, const float*, float, int);
     virtual void fillRectangle(const Math::Rect, const float*, float);
 
-public:
-    TexturePtr* getTexture(TexturePtr* _this, ResourceLocation* location) {
-        return Memory::CallVFunc<29, TexturePtr*, TexturePtr*, ResourceLocation*>(this, _this, location);
-    }
 };
 // I REMOVED COLOR, ADD IT BACK LATER// I REMOVED COLOR, ADD IT BACK LATER
 // I REMOVED COLOR, ADD IT BACK LATER!

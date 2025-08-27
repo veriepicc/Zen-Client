@@ -66,20 +66,7 @@ export namespace Zen
 
         auto tMid = std::chrono::high_resolution_clock::now();
 
-        // Initialize offsets (one-liners)
-        try {
-            OffsetManager::initialize();
-            std::cout << "[Zen] OffsetManager initialized" << std::endl;
-
-            const auto& offsets = OffsetManager::getOffsets();
-            std::cout << "[Zen] Offsets count: " << offsets.size() << std::endl;
-            for (const auto& kv : offsets)
-            {
-                std::cout << "  - " << kv.first << " = 0x" << std::hex << kv.second << std::dec << std::endl;
-            }
-        } catch (...) {
-            std::cout << "[Zen] OffsetManager init failed" << std::endl;
-        }
+       
 
         auto tEnd = std::chrono::high_resolution_clock::now();
         auto sigMs = std::chrono::duration_cast<std::chrono::milliseconds>(tMid - tStart).count();
