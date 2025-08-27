@@ -13,6 +13,7 @@ import HookManager;
 import SigManager;
 import OffsetManager;
 import Memory;
+import SetupAndRender;
 // removed demo imports
 
 namespace Zen::Detail
@@ -84,6 +85,9 @@ export namespace Zen
         auto totalMs = std::chrono::duration_cast<std::chrono::milliseconds>(tEnd - tStart).count();
 
         std::cout << "[Zen] init times: sigs=" << sigMs << "ms, offsets=" << offMs << "ms, total=" << totalMs << "ms" << std::endl;
+
+        // Register and enable render hooks
+        (void)Hooks::Render::SetupAndRender::Register();
 
         // Activate any registered hooks
         auto& hm = GetHookManager();

@@ -42,6 +42,8 @@ public:
 
     // One-liner offsets
     REGISTER_OFFSET(ClientInstance_guiData, 0x5B0)
+    // MinecraftUIRenderContext offsets (set latest values when available)
+    REGISTER_OFFSET(MinecraftUIRenderContext_screenContext, 0x10)
     // ScreenContext offsets
     REGISTER_OFFSET(ScreenContext_colorHolder, 0x30)
     REGISTER_OFFSET(ScreenContext_tessellator, 0xC8)

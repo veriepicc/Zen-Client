@@ -234,6 +234,10 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAs>CompileAsCppModule</CompileAs>
     </ClCompile>
+    <ClCompile Include="Client\Memory\Hooks\Render\SetupAndRender.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
     <ClCompile Include="Client\Memory\Memory.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAs>CompileAsCppModule</CompileAs>
