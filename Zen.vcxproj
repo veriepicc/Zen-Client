@@ -201,6 +201,18 @@
     <ClCompile Include="Client\SDK\Render\HashedString.ixx" />
     <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx" />
     <ClCompile Include="Client\SDK\Render\TextHolder.ixx" />
+    <ClCompile Include="Client\SDK\Tesselator\ScreenContext.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Tesselator\PrimitiveMode.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Tesselator\Tesselator.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
     <ClCompile Include="Client\Utils\Math.ixx" />
     <ClCompile Include="Client\Zen.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

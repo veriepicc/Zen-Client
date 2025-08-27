@@ -16,5 +16,13 @@ export namespace Math {
         Vec2<T> max;
     };
 
+    template <typename T>
+    struct Vec3 {
+        T x, y, z;
+
+        Vec3() : x(0), y(0), z(0) {}
+        Vec3(T x, T y, T z) : x(x), y(y), z(z) {}
+    };
+
     using Rect = RectT<float>;
 }

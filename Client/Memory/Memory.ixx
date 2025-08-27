@@ -161,6 +161,13 @@ export namespace Memory
             store[nameCopy] = addr;
         };
     }
+
+    // Convenience: safely access a member at byte offset without including libhat in each module
+    template<typename MemberType, typename Base>
+    inline auto& MemberAt(Base* ptr, std::size_t offset)
+    {
+        return hat::member_at<MemberType>(ptr, offset);
+    }
 }
 
 

@@ -42,6 +42,9 @@ public:
 
     // One-liner offsets
     REGISTER_OFFSET(ClientInstance_guiData, 0x5B0)
+    // ScreenContext offsets
+    REGISTER_OFFSET(ScreenContext_colorHolder, 0x30)
+    REGISTER_OFFSET(ScreenContext_tessellator, 0xC8)
 };
 
 
