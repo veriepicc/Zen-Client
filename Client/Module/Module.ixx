@@ -116,6 +116,9 @@ public:
         settingIndex.emplace(settings[index].name, index);
     }
 
+protected:
+    void Register();
+
     template <typename T>
     T* getSetting(std::string_view settingName)
     {
@@ -134,4 +137,73 @@ private:
     SettingList settings;
     std::unordered_map<std::string, std::size_t> settingIndex;
 };
+
+export namespace Modules
+{
+    class ModuleRegistry
+    {
+    public:
+        std::span<Module* const> allModules()
+        {
+            return { allModulesView.data(), allModulesView.size() };
+        }
+
+        std::span<Module* const> modulesByCategory(Category category)
+        {
+            auto& view = modulesByCategoryView[static_cast<std::size_t>(category)];
+            return { view.data(), view.size() };
+        }
+
+        Module* findByName(std::string_view name)
+        {
+            if (auto it = nameToModuleIndex.find(std::string(name)); it != nameToModuleIndex.end()) return it->second;
+            return nullptr;
+        }
+
+        void addModule(Module* module)
+        {
+            if (module == nullptr) return;
+            if (nameToModuleIndex.find(module->nameRef()) != nameToModuleIndex.end()) return;
+
+            allModulesView.push_back(module);
+            nameToModuleIndex.emplace(module->nameRef(), module);
+            modulesByCategoryView[static_cast<std::size_t>(module->categoryRef())].push_back(module);
+        }
+    private:
+        std::vector<Module*> allModulesView;
+        std::array<std::vector<Module*>, 6> modulesByCategoryView;
+        std::unordered_map<std::string, Module*> nameToModuleIndex;
+    };
+
+    inline ModuleRegistry& getRegistry()
+    {
+        static ModuleRegistry instance;
+        return instance;
+    }
+
+    export inline std::span<Module* const> All()
+    {
+        return getRegistry().allModules();
+    }
+
+    export inline std::span<Module* const> ByCategory(Category category)
+    {
+        return getRegistry().modulesByCategory(category);
+    }
+
+    export inline Module* Find(std::string_view name)
+    {
+        return getRegistry().findByName(name);
+    }
+
+    export inline void Register(Module* module)
+    {
+        getRegistry().addModule(module);
+    }
+}
+
+inline void Module::Register()
+{
+    Modules::Register(this);
+}
 

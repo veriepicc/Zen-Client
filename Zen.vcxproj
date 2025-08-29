@@ -100,8 +100,10 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <UseMultiToolTask>true</UseMultiToolTask>
+      <DisableIntelliSense>true</DisableIntelliSense>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -123,6 +125,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <UseMultiToolTask>true</UseMultiToolTask>
+      <DisableIntelliSense>true</DisableIntelliSense>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
@@ -131,6 +134,7 @@
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
+      
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -153,8 +157,10 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <UseMultiToolTask>true</UseMultiToolTask>
+      <DisableIntelliSense>true</DisableIntelliSense>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -176,6 +182,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <UseMultiToolTask>true</UseMultiToolTask>
+      <DisableIntelliSense>true</DisableIntelliSense>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
@@ -184,6 +191,7 @@
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
+      
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -198,81 +206,91 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Client\dllmain.cpp" />
-    <ClCompile Include="Client\SDK\Render\HashedString.ixx" />
-    <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx" />
-    <ClCompile Include="Client\SDK\Render\TextHolder.ixx" />
+    <ClCompile Include="Client\SDK\Render\HashedString.ixx">
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx">
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
     <ClCompile Include="Client\SDK\Tesselator\ScreenContext.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\SDK\Tesselator\PrimitiveMode.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\SDK\Tesselator\Tesselator.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Utils\Math.ixx" />
+    <ClCompile Include="Client\Utils\Math.ixx">
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
     <ClCompile Include="Client\Zen.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+      <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\SDK.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+      <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="Client\Utils\Utils.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Memory\SigManager.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+      <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="Client\Memory\OffsetManager.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+      <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="Client\Memory\Hooks\HookManager.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Memory\Hooks\Render\SetupAndRender.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Memory\Memory.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Module\Module.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
-    </ClCompile>
-    <ClCompile Include="Client\Module\ModuleManager.ixx">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Module\Combat\Killaura.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Module\Visual\ClickGui.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Module\Movement\Flight.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Module\World\Xray.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Module\Player\AutoSprint.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Module\Misc\AutoGG.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <CompileAs>CompileAsCppModule</CompileAs>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Include\minhook\buffer.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

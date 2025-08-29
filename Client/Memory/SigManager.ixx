@@ -6,6 +6,7 @@ module;
 #include <span>
 #include <unordered_map>
 #include <functional>
+#include <iostream>
 
 #include <libhat/libhat.hpp>
 
@@ -47,6 +48,15 @@ public:
     static const std::unordered_map<std::string, std::uintptr_t>& getSigs()
     {
         return sigs;
+    }
+
+    static void logStatus()
+    {
+        std::cout << "[Sig] entries=" << sigs.size() << std::endl;
+        for (const auto& kv : sigs)
+        {
+            std::cout << "  - " << kv.first << " = 0x" << std::hex << kv.second << std::dec << std::endl;
+        }
     }
 
     REGISTER_SIG(ContainerScreenController_onContainerSlotHovered,

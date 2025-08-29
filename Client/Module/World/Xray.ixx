@@ -14,6 +14,7 @@ public:
     {
         addSetting(Settings::color("Highlight", Color(255, 215, 0)));
         addSetting(Settings::boolean("ShowOres", true));
+        Register();
     }
 
     void onEnable() override {}

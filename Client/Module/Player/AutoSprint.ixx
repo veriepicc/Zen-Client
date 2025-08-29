@@ -12,6 +12,7 @@ public:
         : Module("AutoSprint", "Automatically sprints when moving.", Category::Player)
     {
         addSetting(Settings::boolean("OnlyForward", true));
+        Register();
     }
 
     void onEnable() override {}

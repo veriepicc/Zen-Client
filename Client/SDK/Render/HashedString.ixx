@@ -4,6 +4,7 @@ module;
 #include <string>
 
 export module HashedString;
+import SDK;
 
 export class HashedString {
 public:
@@ -44,3 +45,4 @@ public:
         return std::strcmp(text.c_str(), rhs.text.c_str()) < 0;
     }
 };
+static SDK::CoreRegistration Register{"HashedString"};

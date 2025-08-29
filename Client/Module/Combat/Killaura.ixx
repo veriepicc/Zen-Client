@@ -14,7 +14,7 @@ public:
     {
         addSetting(Settings::boolean("OnlyPlayers", true));
         addSetting(Settings::decimal("Range", 3.2f, 1.0f, 6.0f));
-        addSetting(Settings::integer("APS", 12, 1, 20));
+        Register();
     }
 
     void onEnable() override {}

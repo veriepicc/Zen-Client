@@ -8,58 +8,58 @@ import HookManager;
 import SigManager;
 import Memory;
 import MinecraftUIRenderContext;
-import Math;
 import PrimitiveMode;
 import OffsetManager;
-import ScreenContext;
+import HookManager;
 
-namespace Hooks::Render::Detail
+namespace Hooks::Render::SetupAndRender
 {
-    using SetupAndRenderFn = void(*)(void*, MinecraftUIRenderContext*);
-    inline SetupAndRenderFn g_originalSetupAndRender { nullptr };
-    inline bool g_drewTestTriangleOnce { false };
+    using SetupAndRenderFunction = void(*)(void*, MinecraftUIRenderContext*);
 
-    // Detours
-    inline void SetupAndRender_Detour(void* screenView, MinecraftUIRenderContext* ctx)
+    struct State
     {
-        // Draw once, before original, to avoid use-after-free of screenContext on UI transitions
-        if (!g_drewTestTriangleOnce && ctx)
+        static inline SetupAndRenderFunction originalFunction = nullptr;
+        static inline bool hasDrawnOnce = false;
+    };
+
+    inline void Detour(void* screenView, MinecraftUIRenderContext* renderContext)
+    {
+        if (!State::hasDrawnOnce && renderContext)
         {
-            void* sc = Memory::MemberAt<void*>(reinterpret_cast<char*>(ctx), OffsetManager::MinecraftUIRenderContext_screenContext);
-            if (!sc) {
-                if (g_originalSetupAndRender) g_originalSetupAndRender(screenView, ctx);
+            void* screenContext = Memory::MemberAt<void*>(reinterpret_cast<char*>(renderContext), Offsets::MinecraftUIRenderContext_screenContext);
+            if (!screenContext) {
+                if (State::originalFunction) State::originalFunction(screenView, renderContext);
                 return;
             }
-            void* tess = Memory::MemberAt<void*>(reinterpret_cast<char*>(sc), OffsetManager::ScreenContext_tessellator);
-            if (!tess) {
-                if (g_originalSetupAndRender) g_originalSetupAndRender(screenView, ctx);
+            void* tessellator = Memory::MemberAt<void*>(reinterpret_cast<char*>(screenContext), Offsets::ScreenContext_tessellator);
+            if (!tessellator) {
+                if (State::originalFunction) State::originalFunction(screenView, renderContext);
                 return;
             }
 
-            void* beginFn = SigManager::Tessellator_begin_b ? SigManager::Tessellator_begin_b : SigManager::Tessellator_begin_a;
-            void* colorFn = SigManager::Tessellator_colorF;
-            void* vertexFn = SigManager::Tessellator_vertex;
-            if (beginFn && colorFn && vertexFn)
+            void* beginFunction = SigManager::Tessellator_begin_b ? SigManager::Tessellator_begin_b : SigManager::Tessellator_begin_a;
+            void* colorFunction = SigManager::Tessellator_colorF;
+            void* vertexFunction = SigManager::Tessellator_vertex;
+            if (beginFunction && colorFunction && vertexFunction)
             {
-                Memory::CallFunc<void, void*, mce::PrimitiveMode, int, bool>(beginFn, tess, mce::PrimitiveMode::TriangleList, 3, false);
-                Memory::CallFunc<void, void*, float, float, float, float>(colorFn, tess, 1.0f, 1.0f, 1.0f, 1.0f);
-                Memory::CallFunc<void, void*, float, float, float>(vertexFn, tess, 10.0f, 10.0f, 0.0f);
-                Memory::CallFunc<void, void*, float, float, float>(vertexFn, tess, 110.0f, 10.0f, 0.0f);
-                Memory::CallFunc<void, void*, float, float, float>(vertexFn, tess, 60.0f, 110.0f, 0.0f);
-                g_drewTestTriangleOnce = true;
+                Memory::CallFunc<void, void*, mce::PrimitiveMode, int, bool>(beginFunction, tessellator, mce::PrimitiveMode::TriangleList, 3, false);
+                Memory::CallFunc<void, void*, float, float, float, float>(colorFunction, tessellator, 1.0f, 1.0f, 1.0f, 1.0f);
+                Memory::CallFunc<void, void*, float, float, float>(vertexFunction, tessellator, 10.0f, 10.0f, 0.0f);
+                Memory::CallFunc<void, void*, float, float, float>(vertexFunction, tessellator, 110.0f, 10.0f, 0.0f);
+                Memory::CallFunc<void, void*, float, float, float>(vertexFunction, tessellator, 60.0f, 110.0f, 0.0f);
+                State::hasDrawnOnce = true;
             }
         }
 
-        if (g_originalSetupAndRender)
-            g_originalSetupAndRender(screenView, ctx);
+        if (State::originalFunction)
+            State::originalFunction(screenView, renderContext);
     }
 }
 
 export namespace Hooks::Render::SetupAndRender
 {
-    inline bool Register()
+    inline bool Install()
     {
-        // Ensure signature resolved
         void* target = SigManager::Setupandrender;
         if (!target)
         {
@@ -67,13 +67,15 @@ export namespace Hooks::Render::SetupAndRender
             return false;
         }
 
-        auto& hm = GetHookManager();
-        return hm.hook<Hooks::Render::Detail::SetupAndRenderFn>(
+        auto& hookManager = GetHookManager();
+        return hookManager.hook<Hooks::Render::SetupAndRender::SetupAndRenderFunction>(
             target,
-            Hooks::Render::Detail::SetupAndRender_Detour,
-            &Hooks::Render::Detail::g_originalSetupAndRender
+            Hooks::Render::SetupAndRender::Detour,
+            &Hooks::Render::SetupAndRender::State::originalFunction
         );
     }
 }
+
+static HookRegistry::Registration RegisterHook{ &Hooks::Render::SetupAndRender::Install };
 
 

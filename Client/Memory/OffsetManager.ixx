@@ -1,52 +1,18 @@
 module;
 #include <cstdint>
-#include <string>
-#include <unordered_map>
-#include <vector>
-#include <functional>
 
 export module OffsetManager;
 
-#define REGISTER_OFFSET(Name, Value) \
-public: \
-static inline std::uint32_t Name; \
-private: \
-static inline std::function<void()> Name##Reg = ( \
-    initializers.emplace_back([&]() { Name = Value; offsets[#Name] = Name; }), \
-    std::function<void()>() \
-); \
-public:
-
-export class OffsetManager
+// Minimal, constexpr-style offsets to avoid initializer/linker and IntelliSense issues
+export namespace Offsets
 {
-private:
-    static inline std::vector<std::function<void()>> initializers;
-    static inline std::unordered_map<std::string, std::uint32_t> offsets;
+    // Global/client offsets
+    inline constexpr std::uint32_t ClientInstance_guiData = 0x5B0;
 
-public:
-    static void initialize()
-    {
-        for (const auto& init : initializers) init();
-    }
-
-    static void deinitialize()
-    {
-        initializers.clear();
-        offsets.clear();
-    }
-
-    static const std::unordered_map<std::string, std::uint32_t>& getOffsets()
-    {
-        return offsets;
-    }
-
-    // One-liner offsets
-    REGISTER_OFFSET(ClientInstance_guiData, 0x5B0)
     // MinecraftUIRenderContext offsets (set latest values when available)
-    REGISTER_OFFSET(MinecraftUIRenderContext_screenContext, 0x10)
+    inline constexpr std::uint32_t MinecraftUIRenderContext_screenContext = 0x10;
+
     // ScreenContext offsets
-    REGISTER_OFFSET(ScreenContext_colorHolder, 0x30)
-    REGISTER_OFFSET(ScreenContext_tessellator, 0xC8)
-};
-
-
+    inline constexpr std::uint32_t ScreenContext_colorHolder = 0x30;
+    inline constexpr std::uint32_t ScreenContext_tessellator = 0xC8;
+}

@@ -12,6 +12,7 @@ public:
         : Module("AutoGG", "Sends a GG message after a match.", Category::Misc)
     {
         addSetting(Settings::text("Message", "gg"));
+        Register();
     }
 
     void onEnable() override {}

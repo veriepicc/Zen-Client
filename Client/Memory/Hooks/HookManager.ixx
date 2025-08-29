@@ -203,6 +203,41 @@ export inline HookManager& GetHookManager()
     return instance;
 }
 
+namespace HookRegistryInternal
+{
+    inline std::vector<bool (*)()>& List()
+    {
+        static std::vector<bool (*)()> fns;
+        return fns;
+    }
+}
+
+export namespace HookRegistry
+{
+    using RegisterFn = bool (*)();
+
+    struct Registration
+    {
+        explicit Registration(RegisterFn fn)
+        {
+            HookRegistryInternal::List().push_back(fn);
+        }
+    };
+
+    inline bool InitializeAll()
+    {
+        bool ok = true;
+        for (auto fn : HookRegistryInternal::List())
+            ok = fn() && ok;
+        return ok;
+    }
+
+    inline void Clear()
+    {
+        HookRegistryInternal::List().clear();
+    }
+}
+
 // Simple C-style registry API similar to the reference
 export struct HookInfo { void** original; void* detour; void* target; };
 

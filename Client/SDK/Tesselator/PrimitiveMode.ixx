@@ -1,4 +1,7 @@
+
 export module PrimitiveMode;
+import SDK;
+
 
 export namespace mce {
     enum class PrimitiveMode : int {
@@ -9,5 +12,6 @@ export namespace mce {
         PointList = 4,
     };
 }
+static SDK::CoreRegistration Register{"PrimitiveMode"};
 
 

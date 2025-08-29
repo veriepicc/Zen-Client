@@ -6,6 +6,7 @@ import Math;
 import SigManager;
 import PrimitiveMode;
 import Memory;
+import SDK;
 
 export class Tessellator {
 public:
@@ -39,5 +40,7 @@ public:
         Memory::CallFunc<void, void*, bool>(target, this, a1);
     }
 };
+
+static SDK::CoreRegistration Register{"Tesselator"};
 
 

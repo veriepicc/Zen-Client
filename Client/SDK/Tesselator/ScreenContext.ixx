@@ -4,9 +4,10 @@ module;
 
 export module ScreenContext;
 
-export import OffsetManager;
+import OffsetManager;
 import Memory;
 export import Tesselator;
+import SDK;
 
 struct MCCColor;
 class Tessellator;
@@ -14,12 +15,14 @@ class Tessellator;
 export class ScreenContext {
 public:
     MCCColor* getColorHolder() {
-        return Memory::MemberAt<MCCColor*>(this, OffsetManager::ScreenContext_colorHolder);
+        return Memory::MemberAt<MCCColor*>(this, Offsets::ScreenContext_colorHolder);
     }
 
+
     Tessellator* getTessellator() {
-        return Memory::MemberAt<Tessellator*>(this, OffsetManager::ScreenContext_tessellator);
+        return Memory::MemberAt<Tessellator*>(this, Offsets::ScreenContext_tessellator);
     }
 };
+static SDK::CoreRegistration Register{"ScreenContext"};
 
 
