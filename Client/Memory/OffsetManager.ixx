@@ -10,7 +10,9 @@ export namespace Offsets
     inline constexpr std::uint32_t ClientInstance_guiData = 0x5B0;
 
     // MinecraftUIRenderContext offsets (set latest values when available)
-    inline constexpr std::uint32_t MinecraftUIRenderContext_screenContext = 0x10;
+    inline constexpr std::uint32_t MinecraftUIRenderContext_clientInstance = 0x08; // latest known
+    inline constexpr std::uint32_t MinecraftUIRenderContext_screenContext = 0x10;  // latest known
+    inline constexpr std::uint32_t MinecraftUIRenderContext_textures = 0x48;       // latest known
 
     // ScreenContext offsets
     inline constexpr std::uint32_t ScreenContext_colorHolder = 0x30;

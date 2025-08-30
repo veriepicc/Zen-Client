@@ -22,7 +22,9 @@ static inline void* Name; \
 private: \
 static inline std::function<void()> Name##Reg = ( \
     initializers.emplace_back( \
-        Memory::MakeSigInitializer(#Name, hat::compile_signature<Pattern>(), Offset, &Name, sigs, ".text") \
+        (Type == SigType::Sig) \
+            ? Memory::MakeSigInitializer(#Name, hat::compile_signature<Pattern>(), Offset, &Name, sigs, ".text") \
+            : Memory::MakeRefSigInitializer(#Name, hat::compile_signature<Pattern>(), Offset, &Name, sigs, ".text") \
     ), \
     std::function<void()>() \
 ); \

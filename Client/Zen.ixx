@@ -12,6 +12,7 @@ import HookManager;
 import SigManager;
 import SetupAndRender;
 import Module;
+import ClickGui;
 
 namespace Zen::Detail
 {
@@ -38,7 +39,7 @@ export namespace Zen
         std::cout.setf(std::ios::unitbuf);
         std::cerr.setf(std::ios::unitbuf);
         std::cout << "Zen Client has been initialized!" << std::endl;
-
+        auto tStart = std::chrono::high_resolution_clock::now();
         SigManager::initialize();
         {
             const auto& sigs = SigManager::getSigs();
@@ -57,9 +58,22 @@ export namespace Zen
                 }
             }
         }
+        auto tAfterSigs = std::chrono::high_resolution_clock::now();
 
         HookRegistry::InitializeAll();
+        auto tAfterHooks = std::chrono::high_resolution_clock::now();
         auto& hm = GetHookManager();
         hm.enableAll();
+        if (auto* clickGui = Modules::Find("ClickGui")) clickGui->setEnabled(true);
+        auto tAfterEnable = std::chrono::high_resolution_clock::now();
+
+        auto sigMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterSigs - tStart).count();
+        auto hooksMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterHooks - tAfterSigs).count();
+        auto enableMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterEnable - tAfterHooks).count();
+        auto totalMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterEnable - tStart).count();
+        std::cout << "[Zen] init times: sigs=" << sigMs
+                  << "ms, hooks=" << hooksMs
+                  << "ms, enable=" << enableMs
+                  << "ms, total=" << totalMs << "ms" << std::endl;
     }
 }

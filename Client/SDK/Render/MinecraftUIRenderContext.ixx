@@ -8,6 +8,11 @@ import SDK;
 export class MinecraftUIRenderContext
 {
 public:
+    void* getClientInstance()
+    {
+        return Memory::MemberAt<void*>(this, Offsets::MinecraftUIRenderContext_clientInstance);
+    }
+
     void* getScreenContext()
     {
         return Memory::MemberAt<void*>(this, Offsets::MinecraftUIRenderContext_screenContext);

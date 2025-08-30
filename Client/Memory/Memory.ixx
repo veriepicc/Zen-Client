@@ -162,6 +162,53 @@ export namespace Memory
         };
     }
 
+    // Factory for reference signatures: read pointer at (match + relativeOffset)
+    inline std::function<void()> MakeRefSigInitializer(const char* name,
+                                                       std::span<const hat::signature_element> sig,
+                                                       int relativeOffset,
+                                                       void** outPtr,
+                                                       std::unordered_map<std::string, std::uintptr_t>& store,
+                                                       std::string_view section = ".text")
+    {
+        std::string nameCopy(name);
+        std::vector<hat::signature_element> pattern(sig.begin(), sig.end());
+        return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), relativeOffset, outPtr, &store, section]() mutable {
+            auto base = ScanSignature(std::span{pattern}, 0, section);
+            std::uintptr_t finalAddr = 0;
+            if (base != 0)
+            {
+                auto ptrLocation = base + static_cast<std::uintptr_t>(relativeOffset);
+                finalAddr = *reinterpret_cast<const std::uintptr_t*>(ptrLocation);
+            }
+            *outPtr = finalAddr ? reinterpret_cast<void*>(finalAddr) : nullptr;
+            store[nameCopy] = finalAddr;
+        };
+    }
+
+    // Overload for fixed signatures (std::array)
+    template <typename FixedSig>
+    inline std::function<void()> MakeRefSigInitializer(const char* name,
+                                                       const FixedSig& fixed,
+                                                       int relativeOffset,
+                                                       void** outPtr,
+                                                       std::unordered_map<std::string, std::uintptr_t>& store,
+                                                       std::string_view section = ".text")
+    {
+        std::string nameCopy(name);
+        std::vector<hat::signature_element> pattern(fixed.begin(), fixed.end());
+        return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), relativeOffset, outPtr, &store, section]() mutable {
+            auto base = ScanSignature(std::span{pattern}, 0, section);
+            std::uintptr_t finalAddr = 0;
+            if (base != 0)
+            {
+                auto ptrLocation = base + static_cast<std::uintptr_t>(relativeOffset);
+                finalAddr = *reinterpret_cast<const std::uintptr_t*>(ptrLocation);
+            }
+            *outPtr = finalAddr ? reinterpret_cast<void*>(finalAddr) : nullptr;
+            store[nameCopy] = finalAddr;
+        };
+    }
+
     // Convenience: safely access a member at byte offset without including libhat in each module
     template<typename MemberType, typename Base>
     inline auto& MemberAt(Base* ptr, std::size_t offset)
