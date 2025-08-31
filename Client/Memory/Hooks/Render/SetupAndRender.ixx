@@ -17,6 +17,7 @@ import MaterialPtr;
 import ScreenContext;
 import HashedString;
 import Tesselator;
+import Math;
 
 namespace Hooks::Render::SetupAndRender
 {
@@ -43,15 +44,32 @@ namespace Hooks::Render::SetupAndRender
                 return;
             }
 
-            tessellator->begin(mce::PrimitiveMode::TriangleStrip, 3);
-
-            tessellator->vertex(0.f, 0.f, 0.f);
-            tessellator->vertex(100.f, 0.f, 0.f);
-            tessellator->vertex(100.f, 100.f, 0.f);
-            tessellator->vertex(0.f, 100.f, 0.f);
-
             HashedString ui_fill("ui_fill_color");
             auto mat = MaterialPtr::createMaterial(ui_fill);
+
+            auto start = Math::Vec2<float>(0.f, 0.f);
+            auto end = Math::Vec2<float>(100.f, 100.f);
+            float lineWidth = 3.f;
+
+            float modX = 0 - (start.y - end.y);
+            float modY = start.x - end.x;
+
+            float len = sqrtf(modX * modX + modY * modY);
+
+            modX /= len;
+            modY /= len;
+            modX *= lineWidth;
+            modY *= lineWidth;
+
+            tessellator->begin(mce::PrimitiveMode::TriangleStrip, 6);
+
+            tessellator->vertex(start.x + modX, start.y + modY, 0);
+            tessellator->vertex(start.x - modX, start.y - modY, 0);
+            tessellator->vertex(end.x - modX, end.y - modY, 0);
+
+            tessellator->vertex(start.x + modX, start.y + modY, 0);
+            tessellator->vertex(end.x + modX, end.y + modY, 0);
+            tessellator->vertex(end.x - modX, end.y - modY, 0);
 
             MeshHelpers::renderMeshImmediately(screenContext, tessellator, mat);
             
