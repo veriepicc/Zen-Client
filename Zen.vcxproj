@@ -102,8 +102,7 @@
       <UseMultiToolTask>true</UseMultiToolTask>
       <DisableIntelliSense>true</DisableIntelliSense>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
-      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;$(ProjectDir)Client;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -127,14 +126,13 @@
       <UseMultiToolTask>true</UseMultiToolTask>
       <DisableIntelliSense>true</DisableIntelliSense>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
-      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;$(ProjectDir)Client;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
-      
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -159,8 +157,7 @@
       <UseMultiToolTask>true</UseMultiToolTask>
       <DisableIntelliSense>true</DisableIntelliSense>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
-      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;$(ProjectDir)Client;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -184,14 +181,13 @@
       <UseMultiToolTask>true</UseMultiToolTask>
       <DisableIntelliSense>true</DisableIntelliSense>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
-      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;$(ProjectDir)Client;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
-      
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -206,89 +202,91 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Client\dllmain.cpp" />
-    <ClCompile Include="Client\SDK\Render\HashedString.ixx">
+    <ClCompile Include="Client\SDK\Render\HashedString.hpp">
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx">
+    <ClCompile Include="Client\SDK\Render\MaterialPtr.hpp" />
+    <ClCompile Include="Client\SDK\Render\MeshHelper.hpp" />
+    <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.hpp">
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\SDK\Tesselator\ScreenContext.ixx">
+    <ClCompile Include="Client\SDK\Tessellator\ScreenContext.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\SDK\Tesselator\PrimitiveMode.ixx">
+    <ClCompile Include="Client\SDK\Tessellator\PrimitiveMode.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\SDK\Tesselator\Tesselator.ixx">
+    <ClCompile Include="Client\SDK\Tessellator\Tessellator.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Utils\Math.ixx">
+    <ClCompile Include="Client\Utils\Math.hpp">
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Zen.ixx">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrimaryModuleInterface>true</PrimaryModuleInterface>
-      <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
-    </ClCompile>
-    <ClCompile Include="Client\SDK\SDK.ixx">
+    <ClCompile Include="Client\Zen.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
       <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="Client\Utils\Utils.ixx">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrimaryModuleInterface>true</PrimaryModuleInterface>
-    </ClCompile>
-    <ClCompile Include="Client\Memory\SigManager.ixx">
+    <ClCompile Include="Client\SDK\SDK.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
       <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="Client\Memory\OffsetManager.ixx">
+    <ClCompile Include="Client\Utils\Utils.hpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\SigManager.hpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+      <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\OffsetManager.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAs>CompileAsCppModule</CompileAs>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
       <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="Client\Memory\Hooks\HookManager.ixx">
+    <ClCompile Include="Client\Memory\Hooks\HookManager.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Memory\Hooks\Render\SetupAndRender.ixx">
+    <ClCompile Include="Client\Memory\Hooks\Render\SetupAndRender.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Memory\Memory.ixx">
+    <ClCompile Include="Client\Memory\Memory.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Module\Module.ixx">
+    <ClCompile Include="Client\Module\Module.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Module\Combat\Killaura.ixx">
+    <ClCompile Include="Client\Module\Combat\Killaura.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Module\Visual\ClickGui.ixx">
+    <ClCompile Include="Client\Module\Visual\ClickGui.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Module\Movement\Flight.ixx">
+    <ClCompile Include="Client\Module\Movement\Flight.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Module\World\Xray.ixx">
+    <ClCompile Include="Client\Module\World\Xray.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Module\Player\AutoSprint.ixx">
+    <ClCompile Include="Client\Module\Player\AutoSprint.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Client\Module\Misc\AutoGG.ixx">
+    <ClCompile Include="Client\Module\Misc\AutoGG.hpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
@@ -307,6 +305,110 @@
     <ClCompile Include="Include\minhook\hde\hde64.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Include\entt\config\config.h" />
+    <ClInclude Include="Include\entt\config\macro.h" />
+    <ClInclude Include="Include\entt\config\version.h" />
+    <ClInclude Include="Include\entt\container\dense_map.hpp" />
+    <ClInclude Include="Include\entt\container\dense_set.hpp" />
+    <ClInclude Include="Include\entt\container\fwd.hpp" />
+    <ClInclude Include="Include\entt\core\algorithm.hpp" />
+    <ClInclude Include="Include\entt\core\any.hpp" />
+    <ClInclude Include="Include\entt\core\attribute.h" />
+    <ClInclude Include="Include\entt\core\compressed_pair.hpp" />
+    <ClInclude Include="Include\entt\core\enum.hpp" />
+    <ClInclude Include="Include\entt\core\family.hpp" />
+    <ClInclude Include="Include\entt\core\fwd.hpp" />
+    <ClInclude Include="Include\entt\core\hashed_string.hpp" />
+    <ClInclude Include="Include\entt\core\ident.hpp" />
+    <ClInclude Include="Include\entt\core\iterator.hpp" />
+    <ClInclude Include="Include\entt\core\memory.hpp" />
+    <ClInclude Include="Include\entt\core\monostate.hpp" />
+    <ClInclude Include="Include\entt\core\tuple.hpp" />
+    <ClInclude Include="Include\entt\core\type_info.hpp" />
+    <ClInclude Include="Include\entt\core\type_traits.hpp" />
+    <ClInclude Include="Include\entt\core\utility.hpp" />
+    <ClInclude Include="Include\entt\entity\component.hpp" />
+    <ClInclude Include="Include\entt\entity\entity.hpp" />
+    <ClInclude Include="Include\entt\entity\fwd.hpp" />
+    <ClInclude Include="Include\entt\entity\group.hpp" />
+    <ClInclude Include="Include\entt\entity\handle.hpp" />
+    <ClInclude Include="Include\entt\entity\helper.hpp" />
+    <ClInclude Include="Include\entt\entity\mixin.hpp" />
+    <ClInclude Include="Include\entt\entity\observer.hpp" />
+    <ClInclude Include="Include\entt\entity\organizer.hpp" />
+    <ClInclude Include="Include\entt\entity\registry.hpp" />
+    <ClInclude Include="Include\entt\entity\runtime_view.hpp" />
+    <ClInclude Include="Include\entt\entity\snapshot.hpp" />
+    <ClInclude Include="Include\entt\entity\sparse_set.hpp" />
+    <ClInclude Include="Include\entt\entity\storage.hpp" />
+    <ClInclude Include="Include\entt\entity\table.hpp" />
+    <ClInclude Include="Include\entt\entity\view.hpp" />
+    <ClInclude Include="Include\entt\entt.hpp" />
+    <ClInclude Include="Include\entt\fwd.hpp" />
+    <ClInclude Include="Include\entt\graph\adjacency_matrix.hpp" />
+    <ClInclude Include="Include\entt\graph\dot.hpp" />
+    <ClInclude Include="Include\entt\graph\flow.hpp" />
+    <ClInclude Include="Include\entt\graph\fwd.hpp" />
+    <ClInclude Include="Include\entt\locator\locator.hpp" />
+    <ClInclude Include="Include\entt\meta\adl_pointer.hpp" />
+    <ClInclude Include="Include\entt\meta\container.hpp" />
+    <ClInclude Include="Include\entt\meta\context.hpp" />
+    <ClInclude Include="Include\entt\meta\factory.hpp" />
+    <ClInclude Include="Include\entt\meta\fwd.hpp" />
+    <ClInclude Include="Include\entt\meta\meta.hpp" />
+    <ClInclude Include="Include\entt\meta\node.hpp" />
+    <ClInclude Include="Include\entt\meta\pointer.hpp" />
+    <ClInclude Include="Include\entt\meta\policy.hpp" />
+    <ClInclude Include="Include\entt\meta\range.hpp" />
+    <ClInclude Include="Include\entt\meta\resolve.hpp" />
+    <ClInclude Include="Include\entt\meta\template.hpp" />
+    <ClInclude Include="Include\entt\meta\type_traits.hpp" />
+    <ClInclude Include="Include\entt\meta\utility.hpp" />
+    <ClInclude Include="Include\entt\platform\android-ndk-r17.hpp" />
+    <ClInclude Include="Include\entt\poly\fwd.hpp" />
+    <ClInclude Include="Include\entt\poly\poly.hpp" />
+    <ClInclude Include="Include\entt\process\fwd.hpp" />
+    <ClInclude Include="Include\entt\process\process.hpp" />
+    <ClInclude Include="Include\entt\process\scheduler.hpp" />
+    <ClInclude Include="Include\entt\resource\cache.hpp" />
+    <ClInclude Include="Include\entt\resource\fwd.hpp" />
+    <ClInclude Include="Include\entt\resource\loader.hpp" />
+    <ClInclude Include="Include\entt\resource\resource.hpp" />
+    <ClInclude Include="Include\entt\signal\delegate.hpp" />
+    <ClInclude Include="Include\entt\signal\dispatcher.hpp" />
+    <ClInclude Include="Include\entt\signal\emitter.hpp" />
+    <ClInclude Include="Include\entt\signal\fwd.hpp" />
+    <ClInclude Include="Include\entt\signal\sigh.hpp" />
+    <ClInclude Include="Include\libhat\libhat.hpp" />
+    <ClInclude Include="Include\libhat\LibhatIncludes.hpp" />
+    <ClInclude Include="Include\libhat\libhat\Access.hpp" />
+    <ClInclude Include="Include\libhat\libhat\Callable.hpp" />
+    <ClInclude Include="Include\libhat\libhat\CompileTime.hpp" />
+    <ClInclude Include="Include\libhat\libhat\Concepts.hpp" />
+    <ClInclude Include="Include\libhat\libhat\c\libhat.h" />
+    <ClInclude Include="Include\libhat\libhat\Defines.hpp" />
+    <ClInclude Include="Include\libhat\libhat\FixedString.hpp" />
+    <ClInclude Include="Include\libhat\libhat\MemoryProtector.hpp" />
+    <ClInclude Include="Include\libhat\libhat\Process.hpp" />
+    <ClInclude Include="Include\libhat\libhat\Result.hpp" />
+    <ClInclude Include="Include\libhat\libhat\Scanner.hpp" />
+    <ClInclude Include="Include\libhat\libhat\Signature.hpp" />
+    <ClInclude Include="Include\libhat\libhat\StringLiteral.hpp" />
+    <ClInclude Include="Include\libhat\libhat\Traits.hpp" />
+    <ClInclude Include="Include\minhook\buffer.h" />
+    <ClInclude Include="Include\minhook\hde\hde32.h" />
+    <ClInclude Include="Include\minhook\hde\hde64.h" />
+    <ClInclude Include="Include\minhook\hde\pstdint.h" />
+    <ClInclude Include="Include\minhook\hde\table32.h" />
+    <ClInclude Include="Include\minhook\hde\table64.h" />
+    <ClInclude Include="Include\minhook\MinHook.h" />
+    <ClInclude Include="Include\minhook\trampoline.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
+    <None Include="Include\libhat\libhat\Scanner.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,12 +1,8 @@
-module;
+#pragma once
 #include <string>
+#include "../Module.hpp"
 
-export module Killaura;
-
-import Module;
-import Utils;
-
-export class Killaura : public Module
+class Killaura : public Module
 {
 public:
     Killaura()
@@ -20,7 +16,7 @@ public:
     void onEnable() override {}
     void onDisable() override {}
     void onUpdate() override {}
-    void onRender() override {}
+    //void onRender() override {}
 };
 
 

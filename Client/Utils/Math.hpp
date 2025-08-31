@@ -1,6 +1,6 @@
-export module Math;
+#pragma once
 
-export namespace Math {
+namespace Math {
 
     template <typename T>
     struct Vec2 {

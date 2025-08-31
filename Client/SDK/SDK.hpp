@@ -1,12 +1,10 @@
-module;
+#pragma once
 #include <string>
 #include <string_view>
 #include <vector>
 #include <unordered_set>
 
-export module SDK;
-
-export namespace SDK
+namespace SDK
 {
     enum class EntryKind { Core, Component };
 
@@ -38,42 +36,42 @@ export namespace SDK
         return r;
     }
 
-    export inline void RegisterCore(std::string_view name)
+    inline void RegisterCore(std::string_view name)
     {
         registry().add(name, EntryKind::Core);
     }
 
     // Helper for one-line static registration in a unit
-    export inline bool RegisterCoreOnce(const char* name)
+    inline bool RegisterCoreOnce(const char* name)
     {
         RegisterCore(name);
         return true;
     }
 
-    export inline void RegisterComponent(std::string_view name)
+    inline void RegisterComponent(std::string_view name)
     {
         registry().add(name, EntryKind::Component);
     }
 
-    export inline const std::vector<std::string>& AllCore()
+    inline const std::vector<std::string>& AllCore()
     {
         return registry().core();
     }
 
-    export inline const std::vector<std::string>& AllComponents()
+    inline const std::vector<std::string>& AllComponents()
     {
         return registry().component();
     }
 
     // Registration helpers for clean one-line use in SDK units
-    export struct CoreRegistration
+    struct CoreRegistration
     {
         explicit CoreRegistration(const char* name) { RegisterCore(name); }
     };
-    export struct ComponentRegistration
+    struct ComponentRegistration
     {
         explicit ComponentRegistration(const char* name) { RegisterComponent(name); }
     };
 }
 
-// Intentionally no macro export across modules; use one-line static bool below in each unit
+// Intentionally no macro across modules; use one-line static bool below in each unit

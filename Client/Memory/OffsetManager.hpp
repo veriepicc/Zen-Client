@@ -1,10 +1,8 @@
-module;
+#pragma once
 #include <cstdint>
 
-export module OffsetManager;
-
 // Minimal, constexpr-style offsets to avoid initializer/linker and IntelliSense issues
-export namespace Offsets
+namespace Offsets
 {
     // Global/client offsets
     inline constexpr std::uint32_t ClientInstance_guiData = 0x5B0;

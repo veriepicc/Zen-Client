@@ -1,6 +1,5 @@
-module;
+#pragma once
 #include <windows.h>
-
 #include <minhook/MinHook.h>
 #include <cstdint>
 #include <utility>
@@ -13,9 +12,7 @@ module;
 
 #include <libhat/libhat.hpp>
 
-export module Memory;
-
-export namespace Memory
+namespace Memory
 {
     template <typename R, typename... Args>
     R CallFunc(void* func, Args... args)
@@ -24,11 +21,26 @@ export namespace Memory
     }
 
     template <typename R, typename... Args>
+    R call_func_fastcall(void* func, Args... args)
+    {
+        using Fn = R(__fastcall*)(Args...);
+        return ((Fn)func)(args...);
+    }
+
+    template <typename R, typename... Args>
     R CallVFunc(std::uint32_t index, void* thisPtr, Args... args)
     {
         auto vtable = *reinterpret_cast<void***>(thisPtr);
         auto fn = reinterpret_cast<R(*)(void*, Args...)>(vtable[index]);
         return fn(thisPtr, std::forward<Args>(args)...);
+    }
+
+    template<typename Ret, typename... Args>
+    static auto call_virtual_func(int index, void* _this, Args... args)
+    {
+        using Fn = Ret(__thiscall*)(void*, Args...);
+        auto vtable = *reinterpret_cast<uintptr_t**>(_this);
+        return reinterpret_cast<Fn>(vtable[index])(_this, args...);
     }
 
     struct HookRecord
@@ -92,29 +104,29 @@ export namespace Memory
         std::vector<HookRecord> hooks;
     };
 
-    export inline HookRegistry& Hooks()
+    inline HookRegistry& Hooks()
     {
         static HookRegistry instance;
         return instance;
     }
 
-    export inline bool RegisterHook(void** original, void* detour, void* target)
+    inline bool RegisterHook(void** original, void* detour, void* target)
     {
         return Hooks().registerHook(original, detour, target);
     }
 
-    export inline bool InitializeHooking()
+    inline bool InitializeHooking()
     {
         return Hooks().applyAll();
     }
 
-    export inline void ShutdownHooking()
+    inline void ShutdownHooking()
     {
         Hooks().shutdown();
     }
 
     // Signature scanning utilities (used by SigManager macros)
-    export inline std::uintptr_t ScanSignature(std::span<const hat::signature_element> sig,
+    inline std::uintptr_t ScanSignature(std::span<const hat::signature_element> sig,
                                                int relativeOffset = 0,
                                                std::string_view section = ".text")
     {

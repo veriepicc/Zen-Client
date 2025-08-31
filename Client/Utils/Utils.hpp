@@ -1,10 +1,8 @@
-module;
+#pragma once
 #include <cstdint>
 #include <string>
 
-export module Utils;
-
-export struct Color
+struct Color
 {
     std::uint8_t r { 255 };
     std::uint8_t g { 255 };

@@ -1,11 +1,8 @@
-module;
+#pragma once
 #include <string>
+#include "../Module.hpp"
 
-export module AutoGG;
-
-import Module;
-
-export class AutoGG : public Module
+class AutoGG : public Module
 {
 public:
     AutoGG()
@@ -18,7 +15,7 @@ public:
     void onEnable() override {}
     void onDisable() override {}
     void onUpdate() override {}
-    void onRender() override {}
+    //void onRender() override {}
 };
 
 

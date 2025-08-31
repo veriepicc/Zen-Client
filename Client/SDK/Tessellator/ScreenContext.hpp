@@ -1,18 +1,16 @@
-module;
+#pragma once
 
+#include "Memory/Memory.hpp"
+#include "Memory/SigManager.hpp"
+#include "Utils/Math.hpp"
+#include "../SDK.hpp"
 
-
-export module ScreenContext;
-
-import OffsetManager;
-import Memory;
-export import Tesselator;
-import SDK;
+#include "Memory/OffsetManager.hpp"
+#include "Tessellator.hpp"
 
 struct MCCColor;
-class Tessellator;
 
-export class ScreenContext {
+class ScreenContext {
 public:
     MCCColor* getColorHolder() {
         return Memory::MemberAt<MCCColor*>(this, Offsets::ScreenContext_colorHolder);
@@ -23,6 +21,6 @@ public:
         return Memory::MemberAt<Tessellator*>(this, Offsets::ScreenContext_tessellator);
     }
 };
-static SDK::CoreRegistration Register{"ScreenContext"};
+//static SDK::CoreRegistration Register{"ScreenContext"};
 
 

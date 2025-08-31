@@ -1,11 +1,8 @@
-module;
+#pragma once
 #include <string>
+#include "../Module.hpp"
 
-export module AutoSprint;
-
-import Module;
-
-export class AutoSprint : public Module
+class AutoSprint : public Module
 {
 public:
     AutoSprint()
@@ -18,7 +15,7 @@ public:
     void onEnable() override {}
     void onDisable() override {}
     void onUpdate() override {}
-    void onRender() override {}
+    //void onRender() override {}
 };
 
 

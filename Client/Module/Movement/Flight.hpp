@@ -1,11 +1,8 @@
-module;
+#pragma once
 #include <string>
-
-export module Flight;
-
-import Module;
-
-export class Flight : public Module
+#include "../Module.hpp"
+ 
+class Flight : public Module
 {
 public:
     Flight()
@@ -19,7 +16,7 @@ public:
     void onEnable() override {}
     void onDisable() override {}
     void onUpdate() override {}
-    void onRender() override {}
+    //void onRender() override {}
 };
 
 

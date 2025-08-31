@@ -1,6 +1,5 @@
 #include <windows.h>
-
-import Zen;
+#include "Zen.hpp"
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,

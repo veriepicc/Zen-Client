@@ -1,4 +1,4 @@
-module;
+#pragma once
 #include <cstdint>
 #include <vector>
 #include <string>
@@ -14,9 +14,7 @@ module;
 
 #include <minhook/MinHook.h>
 
-export module HookManager;
-
-export class HookManager
+class HookManager
 {
 public:
     struct FuncHook { virtual void Initialize() = 0; virtual ~FuncHook() = default; };
@@ -197,7 +195,7 @@ private:
 };
 
 // Global accessor for convenience
-export inline HookManager& GetHookManager()
+inline HookManager& GetHookManager()
 {
     static HookManager instance;
     return instance;
@@ -212,7 +210,7 @@ namespace HookRegistryInternal
     }
 }
 
-export namespace HookRegistry
+namespace HookRegistry
 {
     using RegisterFn = bool (*)();
 
@@ -239,14 +237,14 @@ export namespace HookRegistry
 }
 
 // Simple C-style registry API similar to the reference
-export struct HookInfo { void** original; void* detour; void* target; };
+struct HookInfo { void** original; void* detour; void* target; };
 
 namespace HookInternal
 {
     static std::vector<HookInfo> g_hooks;
 }
 
-export namespace HookManagerAPI
+namespace HookManagerAPI
 {
     inline void Register(void** original, void* detour, void* target)
     {

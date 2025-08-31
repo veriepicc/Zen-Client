@@ -1,12 +1,8 @@
-module;
+#pragma once
 #include <string>
+#include "../Module.hpp"
 
-export module Xray;
-
-import Module;
-import Utils;
-
-export class Xray : public Module
+class Xray : public Module
 {
 public:
     Xray()
@@ -20,7 +16,7 @@ public:
     void onEnable() override {}
     void onDisable() override {}
     void onUpdate() override {}
-    void onRender() override {}
+    //void onRender() override {}
 };
 
 

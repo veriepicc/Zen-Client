@@ -3,11 +3,11 @@
 
 #ifndef ENTT_EXPORT
 #    if defined _WIN32 || defined __CYGWIN__ || defined _MSC_VER
-#        define ENTT_EXPORT __declspec(dllexport)
+#        define ENTT___declspec(dllexport)
 #        define ENTT_IMPORT __declspec(dllimport)
 #        define ENTT_HIDDEN
 #    elif defined __GNUC__ && __GNUC__ >= 4
-#        define ENTT_EXPORT __attribute__((visibility("default")))
+#        define ENTT___attribute__((visibility("default")))
 #        define ENTT_IMPORT __attribute__((visibility("default")))
 #        define ENTT_HIDDEN __attribute__((visibility("hidden")))
 #    else /* Unsupported compiler */

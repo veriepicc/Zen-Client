@@ -1,12 +1,11 @@
-module;
+#pragma once
 #include <cstdint>
 #include <cstring>
 #include <string>
 
-export module HashedString;
-import SDK;
+#include "../SDK.hpp"
 
-export class HashedString {
+class HashedString {
 public:
     std::uint64_t hash{};
     std::string text;
@@ -45,4 +44,4 @@ public:
         return std::strcmp(text.c_str(), rhs.text.c_str()) < 0;
     }
 };
-static SDK::CoreRegistration Register{"HashedString"};
+//static SDK::CoreRegistration Register{"HashedString"};

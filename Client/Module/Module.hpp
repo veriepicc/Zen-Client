@@ -1,4 +1,4 @@
-module;
+#pragma once
 #include <string>
 #include <string_view>
 #include <vector>
@@ -12,11 +12,12 @@ module;
 #include <cstdint>
 #include <span>
 
-export module Module;
+#include <Utils/Utils.hpp>
 
-import Utils;
+class MinecraftUIRenderContext;
+class ScreenContext;
 
-export enum class Category
+enum class Category
 {
     Combat,
     Visual,
@@ -33,12 +34,12 @@ namespace detail
     };
 }
 
-export inline constexpr std::string_view categoryName(Category category)
+inline constexpr std::string_view categoryName(Category category)
 {
     return detail::CategoryNames[static_cast<std::size_t>(category)];
 }
 
-export struct Setting
+struct Setting
 {
     std::string name;
     std::variant<bool, int, float, Color, std::string> value;
@@ -46,7 +47,7 @@ export struct Setting
     std::optional<std::pair<float, float>> floatBounds;
 };
 
-export namespace Settings
+namespace Settings
 {
     inline Setting boolean(std::string name, bool value)
     {
@@ -74,7 +75,7 @@ export namespace Settings
     }
 }
 
-export class Module
+class Module
 {
 public:
     Module(std::string name, std::string description, Category category)
@@ -102,7 +103,7 @@ public:
     virtual void onEnable() {}
     virtual void onDisable() {}
     virtual void onUpdate() {}
-    virtual void onRender() {}
+    virtual void onRender(MinecraftUIRenderContext*, ScreenContext*) {}
 
     using SettingList = std::vector<Setting>;
 
@@ -138,7 +139,7 @@ private:
     std::unordered_map<std::string, std::size_t> settingIndex;
 };
 
-export namespace Modules
+namespace Modules
 {
     class ModuleRegistry
     {
@@ -181,22 +182,22 @@ export namespace Modules
         return instance;
     }
 
-    export inline std::span<Module* const> All()
+    inline std::span<Module* const> All()
     {
         return getRegistry().allModules();
     }
 
-    export inline std::span<Module* const> ByCategory(Category category)
+    inline std::span<Module* const> ByCategory(Category category)
     {
         return getRegistry().modulesByCategory(category);
     }
 
-    export inline Module* Find(std::string_view name)
+    inline Module* Find(std::string_view name)
     {
         return getRegistry().findByName(name);
     }
 
-    export inline void Register(Module* module)
+    inline void Register(Module* module)
     {
         getRegistry().addModule(module);
     }

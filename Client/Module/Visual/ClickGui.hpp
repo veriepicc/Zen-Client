@@ -1,16 +1,16 @@
-module;
+#pragma once
 #include <string>
 #include <iostream>
+#include "../Module.hpp"
 
-export module ClickGui;
+#include <SDK/SDK.hpp>
+#include <Memory/OffsetManager.hpp>
+#include <SDK/Render/HashedString.hpp>
+#include <SDK/Render/MinecraftUIRenderContext.hpp>
+#include <SDK/Render/MaterialPtr.hpp>
+#include <SDK/Render/MeshHelper.hpp>
 
-import Module;
-import Utils;
-import SDK;
-import MinecraftUIRenderContext;
-import OffsetManager;
-
-export class ClickGui : public Module
+class ClickGui : public Module
 {
 public:
     ClickGui()
@@ -35,15 +35,27 @@ public:
     }
     void onDisable() override {}
     void onUpdate() override {}
-    void onRender() override
+    void onRender(MinecraftUIRenderContext* mcuirc, ScreenContext* sc) override
     {
-        static bool loggedOnce = false;
-        if (!loggedOnce)
-        {
-            std::cout << "[ClickGui] onRender reached" << std::endl;
-            loggedOnce = true;
+        static MaterialPtr* fillColor = nullptr;
+
+        auto tess = sc->getTessellator();
+        
+        tess->begin(mce::PrimitiveMode::TriangleStrip, 3);
+
+        tess->vertex(0.f, 0.f, 0.f);
+        tess->vertex(100.f, 0.f, 0.f);
+        tess->vertex(100.f, 100.f, 0.f);
+        tess->vertex(0.f, 100.f, 0.f);
+
+        HashedString fillColorStr("ui_fill_color");
+        if (!fillColor) fillColor = MaterialPtr::createMaterial(fillColorStr);
+
+        if (fillColor && tess && sc) {
+            MeshHelper::renderMeshImmediately(sc, tess, fillColor);
         }
+
     }
 };
 
-export ClickGui ClickGuiInstance{};
+ClickGui ClickGuiInstance{};

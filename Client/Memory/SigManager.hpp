@@ -1,4 +1,4 @@
-module;
+#pragma once
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -9,12 +9,9 @@ module;
 #include <iostream>
 
 #include <libhat/libhat.hpp>
+#include "Memory.hpp"
 
-export module SigManager;
-
-import Memory;
-
-export enum class SigType { Sig, ReferenceSig };
+enum class SigType { Sig, ReferenceSig };
 
 #define REGISTER_SIG(Name, Pattern, Type, Offset) \
 public: \
@@ -30,7 +27,7 @@ static inline std::function<void()> Name##Reg = ( \
 ); \
 public:
 
-export class SigManager {
+class SigManager {
 private:
     static inline std::vector<std::function<void()>> initializers;
     static inline std::unordered_map<std::string, std::uintptr_t> sigs;
@@ -75,16 +72,12 @@ public:
                  0)
 
     // Tessellator signatures
-    REGISTER_SIG(Tessellator_begin_a,
+    REGISTER_SIG(Tessellator_begin,
                  "40 53 55 48 83 EC 28 80 B9",
                  SigType::Sig,
                  0)
     REGISTER_SIG(Tessellator_vertexUV_a,
                  "48 83 EC ? 80 B9 ? ? ? ? ? 0F 57 E4",
-                 SigType::Sig,
-                 0)
-    REGISTER_SIG(Tessellator_begin_b,
-                 "48 89 5C 24 ? 56 48 83 EC ? 80 B9 ? ? ? ? ? 45 0F B6",
                  SigType::Sig,
                  0)
     REGISTER_SIG(Tessellator_vertex,
@@ -114,7 +107,7 @@ public:
                 0)
 
     REGISTER_SIG(createMaterial,
-                "48 8B ? ? ? ? ? 48 8D ? ? 48 8D ? ? ? ? ? 48 8B ? ? FF 15 ? ? ? ? 4C 8B ? 48 8B ? ? 48 85 ? 0F 84 ? ? ? ? 8B 42 ? 85 C0 0F 84 ? ? ? ? 66 0F ? ? ? ? ? ? ? 8D 48 ? F0 0F ? ? ? 74 ? 85 C0 0F 84 ? ? ? ? EB ? 49 8B ? 49 8B ? ? 48 89 ? 48 8B ? ? 48 89 ? ? BE ? ? ? ? 48 85 ? 74 ? 8B C6 F0 0F ? ? ? 83 F8 ? 75 ? 48 8B ? 48 8B ? 48 8B ? FF 15 ? ? ? ? 8B C6 F0 0F ? ? ? 83 F8 ? 75 ? 48 8B ? 48 8B ? 48 8B ? ? FF 15 ? ? ? ? 90 48 8B ? ? 48 83 FA ? 76 ? 48 FF ? 48 8B ? ? 48 8B ? 48 81 FA ? ? ? ? 72 ? 48 83 C2 ? 48 8B ? ? 48 2B ? 48 83 C0 ? 48 83 F8 ? 76 ? FF 15 ? ? ? ? CC E8 ? ? ? ? 4C 8D",
+                "48 8B 05 ? ? ? ? 48 8D 55 90 48 8D 0D ? ? ? ? 48 8B 40 08 FF 15 ? ? ? ? 48 8B D8",
                 SigType::Sig,
                 0)
 };

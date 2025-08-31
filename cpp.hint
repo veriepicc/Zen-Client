@@ -1,0 +1,4 @@
+// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
+// such as names of functions and macros.
+// For more information see https://go.microsoft.com/fwlink/?linkid=865984
+#define REGISTER_SIG(Name, Pattern, Type, Offset) public: static inline void* Name; private: static inline std::function<void()> Name##Reg = ( initializers.emplace_back( (Type == SigType::Sig) ? Memory::MakeSigInitializer(#Name, hat::compile_signature<Pattern>(), Offset, &Name, sigs, ".text") : Memory::MakeRefSigInitializer(#Name, hat::compile_signature<Pattern>(), Offset, &Name, sigs, ".text") ), std::function<void()>() ); public:

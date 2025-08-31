@@ -1,4 +1,4 @@
-module;
+#pragma once
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <cstdio>
@@ -6,13 +6,9 @@ module;
 #include <iomanip>
 #include <chrono>
 
-export module Zen;
-
-import HookManager;
-import SigManager;
-import SetupAndRender;
-import Module;
-import ClickGui;
+#include <Memory/SigManager.hpp>
+#include <Memory/Hooks/HookManager.hpp>
+#include <Module/Module.hpp>
 
 namespace Zen::Detail
 {
@@ -30,7 +26,7 @@ namespace Zen::Detail
     }
 }
 
-export namespace Zen
+namespace Zen
 {
     inline void Initialize()
     {
