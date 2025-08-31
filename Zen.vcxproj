@@ -103,7 +103,6 @@
       <DisableIntelliSense>true</DisableIntelliSense>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,7 +133,6 @@
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
-      
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -160,7 +158,6 @@
       <DisableIntelliSense>true</DisableIntelliSense>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -191,7 +188,6 @@
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
-      
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -209,6 +205,8 @@
     <ClCompile Include="Client\SDK\Render\HashedString.ixx">
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
+    <ClCompile Include="Client\SDK\Render\MaterialPtr.ixx" />
+    <ClCompile Include="Client\SDK\Render\MeshHelpers.ixx" />
     <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx">
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>

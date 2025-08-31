@@ -1,7 +1,5 @@
 module;
 
-
-
 export module ScreenContext;
 
 import OffsetManager;
@@ -10,7 +8,6 @@ export import Tesselator;
 import SDK;
 
 struct MCCColor;
-class Tessellator;
 
 export class ScreenContext {
 public:

@@ -4,6 +4,7 @@ export module MinecraftUIRenderContext;
 import Memory;
 import OffsetManager;
 import SDK;
+import ScreenContext;
 
 export class MinecraftUIRenderContext
 {
@@ -13,9 +14,9 @@ public:
         return Memory::MemberAt<void*>(this, Offsets::MinecraftUIRenderContext_clientInstance);
     }
 
-    void* getScreenContext()
+    ScreenContext* getScreenContext()
     {
-        return Memory::MemberAt<void*>(this, Offsets::MinecraftUIRenderContext_screenContext);
+        return Memory::MemberAt<ScreenContext*>(this, Offsets::MinecraftUIRenderContext_screenContext);
     }
 };
 static SDK::CoreRegistration Register{"MinecraftUIRenderContext"};

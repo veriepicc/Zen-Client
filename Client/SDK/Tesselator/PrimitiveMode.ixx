@@ -5,11 +5,12 @@ import SDK;
 
 export namespace mce {
     enum class PrimitiveMode : int {
-        TriangleList = 0,
-        TriangleStrip = 1,
-        LineList = 2,
-        LineStrip = 3,
-        PointList = 4,
+		None = 0,
+		QuadList = 1,
+		TriangleList = 2,
+		TriangleStrip = 3,
+		LineList = 4,
+		LineStrip = 5
     };
 }
 static SDK::CoreRegistration Register{"PrimitiveMode"};
