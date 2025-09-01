@@ -115,7 +115,7 @@ public:
 
     // MeshHelpers::renderMeshImmediately2 (textured) - latest known cross-version signature
     REGISTER_SIG(MeshHelper_renderMeshImmediately2,
-                "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 81 EC ? ? ? ? 49 8B F1 49 8B E8 48 8B FA 4C 8B F1",
+                "40 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 98 FC FF FF 48 81 EC 68 04 00 00 49",
                 SigType::Sig,
                 0)
 

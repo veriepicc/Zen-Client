@@ -1,5 +1,4 @@
 module;
-#include <iostream>
 
 export module KeyboardHook;
 
@@ -17,7 +16,6 @@ namespace Hooks::Input::Keyboard
 
     static void __stdcall Detour(int key, bool state)
     {
-        std::cout << "[Keyboard] key=" << key << " state=" << (state ? 1 : 0) << std::endl;
         if (State::original) State::original(key, state);
     }
 }
@@ -29,7 +27,6 @@ export namespace Hooks::Input::Keyboard
         void* target = SigManager::Keyboard_feed;
         if (!target)
         {
-            std::cout << "[KeyboardHook] signature not resolved" << std::endl;
             return false;
         }
         auto& hm = GetHookManager();

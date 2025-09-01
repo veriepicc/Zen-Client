@@ -1,5 +1,4 @@
 module;
-#include <iostream>
 
 export module MouseHook;
 
@@ -18,8 +17,6 @@ namespace Hooks::Input::Mouse
     static void __stdcall Detour(void* mouseDevice, char button, char action, short mouseX, short mouseY,
                                  short movementX, short movementY, char a8)
     {
-        std::cout << "[Mouse] btn=" << (int)button << " act=" << (int)action
-                  << " x=" << mouseX << " y=" << mouseY << " dx=" << movementX << " dy=" << movementY << std::endl;
         if (State::original) State::original(mouseDevice, button, action, mouseX, mouseY, movementX, movementY, a8);
     }
 }
@@ -31,7 +28,6 @@ export namespace Hooks::Input::Mouse
         void* target = SigManager::MouseDevice_feed;
         if (!target)
         {
-            std::cout << "[MouseHook] signature not resolved" << std::endl;
             return false;
         }
         auto& hm = GetHookManager();

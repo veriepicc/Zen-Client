@@ -22,6 +22,8 @@ import TexturePtr;
 import Color;
 import BedrockTextureData;
 import RectangleArea;
+// ImGui bridge
+import imgui_impl_bigrat;
 
 namespace Hooks::Render::SetupAndRender
 {
@@ -103,6 +105,17 @@ namespace Hooks::Render::SetupAndRender
             auto& hookManager = GetHookManager();
             hookManager.hook<DrawImageFunction>(target, DrawImageDetour, &State::originalDrawImage);
         }
+
+        // ImGui demo: init and draw once per frame
+        static bool imguiInit = false;
+        if (!imguiInit)
+        {
+            ImGui_ImplBigRat::Init(renderContext);
+            imguiInit = true;
+        }
+
+        // Demo frame with approximate sizes; these can be sourced from GuiData later
+        ImGui_ImplBigRat::Demo(renderContext, 1.0f / 60.0f, 1280.0f, 720.0f, 1.0f, 1.0f);
 
         if (State::originalFunction)
             State::originalFunction(screenView, renderContext);

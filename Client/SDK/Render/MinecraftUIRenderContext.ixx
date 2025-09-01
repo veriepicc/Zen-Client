@@ -46,6 +46,12 @@ public:
         return Memory::CallVFunc<TexturePtr&, TexturePtr&, const ResourceLocation&, bool>(29, this, outPtr, location, forceReload);
     }
 
+    // Upload a texture from in-memory bytes (e.g., PNG). Vtable index based on SDK layout (immediately after getTexture).
+    TexturePtr& getZippedTexture(TexturePtr& outPtr, const std::string& bytes, const ResourceLocation& location, bool forceReload)
+    {
+        return Memory::CallVFunc<TexturePtr&, TexturePtr&, const std::string&, const ResourceLocation&, bool>(30, this, outPtr, bytes, location, forceReload);
+    }
+
     TexturePtr createTexture(const std::string& path, bool external, bool forceReload)
     {
         const auto resource = ResourceLocation(path, external);
