@@ -210,6 +210,38 @@
     <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx">
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
+    <ClCompile Include="Client\SDK\Render\ResourceLocation.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\TexturePtr.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\Nineslice.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\Color.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\BedrockTextureData.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\BedrockTexture.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\TextureGroupBase.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\TextureGroup.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
     <ClCompile Include="Client\SDK\Tesselator\ScreenContext.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>

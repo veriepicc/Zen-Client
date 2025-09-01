@@ -18,6 +18,8 @@ import ScreenContext;
 import HashedString;
 import Tesselator;
 import Math;
+import TexturePtr;
+import Color;
 
 namespace Hooks::Render::SetupAndRender
 {
@@ -26,57 +28,49 @@ namespace Hooks::Render::SetupAndRender
     struct State
     {
         static inline SetupAndRenderFunction originalFunction = nullptr;
-        static inline bool hasDrawnOnce = false;
+        static inline bool imageInitialized = false;
+        static inline TexturePtr imageTexture{};
     };
 
     inline void Detour(void* screenView, MinecraftUIRenderContext* renderContext)
     {
-        if (renderContext)
-        {
-            auto screenContext = Memory::MemberAt<ScreenContext*>(reinterpret_cast<char*>(renderContext), Offsets::MinecraftUIRenderContext_screenContext);
-            if (!screenContext) {
-                if (State::originalFunction) State::originalFunction(screenView, renderContext);
-                return;
-            }
-            auto tessellator = Memory::MemberAt<Tessellator*>(reinterpret_cast<char*>(screenContext), Offsets::ScreenContext_tessellator);
-            if (!tessellator) {
-                if (State::originalFunction) State::originalFunction(screenView, renderContext);
-                return;
-            }
-
-            HashedString ui_fill("ui_fill_color");
-            auto mat = MaterialPtr::createMaterial(ui_fill);
-
-            auto start = Math::Vec2<float>(0.f, 0.f);
-            auto end = Math::Vec2<float>(100.f, 100.f);
-            float lineWidth = 3.f;
-
-            float modX = 0 - (start.y - end.y);
-            float modY = start.x - end.x;
-
-            float len = sqrtf(modX * modX + modY * modY);
-
-            modX /= len;
-            modY /= len;
-            modX *= lineWidth;
-            modY *= lineWidth;
-
-            tessellator->begin(mce::PrimitiveMode::TriangleStrip, 6);
-
-            tessellator->vertex(start.x + modX, start.y + modY, 0);
-            tessellator->vertex(start.x - modX, start.y - modY, 0);
-            tessellator->vertex(end.x - modX, end.y - modY, 0);
-
-            tessellator->vertex(start.x + modX, start.y + modY, 0);
-            tessellator->vertex(end.x + modX, end.y + modY, 0);
-            tessellator->vertex(end.x - modX, end.y - modY, 0);
-
-            MeshHelpers::renderMeshImmediately(screenContext, tessellator, mat);
-            
-        }
-
         if (State::originalFunction)
             State::originalFunction(screenView, renderContext);
+
+        if (!renderContext) return;
+
+        // Initialize external PNG texture once
+        if (!State::imageInitialized)
+        {
+            const std::string path = "C:/Users/veriepic/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/RoamingState/image.png";
+            // Strict PNG: simple extension check
+            if (path.size() >= 4 && (path.ends_with(".png") || path.ends_with(".PNG"))) {
+                auto tmp = renderContext->createTexture(path, /*external*/true, /*forceReload*/true);
+                State::imageTexture = std::move(tmp);
+                State::imageTexture.resourceLocation = std::make_shared<ResourceLocation>(ResourceLocation(path, true));
+                if (!State::imageTexture.clientTexture) {
+                    // Hint the engine to pull it in
+                    ResourceLocation rl(path, true);
+                  //  renderContext->touchTexture(rl);
+                }
+                State::imageInitialized = State::imageTexture.clientTexture != nullptr;
+            }
+        }
+
+        // Draw if texture is ready
+        if (State::imageInitialized)
+        {
+            auto pos = Math::Vec2<float>(50.f, 50.f);
+            auto size = Math::Vec2<float>(256.f, 256.f);
+            auto uvPos = Math::Vec2<float>(0.f, 0.f);
+            auto uvSize = Math::Vec2<float>(1.f, 1.f);
+
+            renderContext->drawImage(State::imageTexture, pos, size, uvPos, uvSize);
+
+            mce::Color color(1.f, 1.f, 1.f, 1.f);
+            HashedString pass("ui_textured");
+            renderContext->flushImages(color, 1.f, pass);
+        }
     }
 }
 
