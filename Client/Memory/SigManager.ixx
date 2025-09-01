@@ -113,9 +113,25 @@ public:
                 SigType::Sig,
                 0)
 
+    // MeshHelpers::renderMeshImmediately2 (textured) - latest known cross-version signature
+    REGISTER_SIG(MeshHelper_renderMeshImmediately2,
+                "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 81 EC ? ? ? ? 49 8B F1 49 8B E8 48 8B FA 4C 8B F1",
+                SigType::Sig,
+                0)
+
     REGISTER_SIG(createMaterial,
                 "48 8B 05 ? ? ? ? 48 8D 55 90 48 8D 0D ? ? ? ? 48 8B 40 08 FF 15 ? ? ? ? 48 8B D8",
                 SigType::Sig,
                 0)
+
+    // Input feed hooks
+    REGISTER_SIG(Keyboard_feed,
+                 "? ? ? ? ? ? ? 4C 8D 05 ? ? ? ? 89 54 24 20 88",
+                 SigType::Sig,
+                 0)
+    REGISTER_SIG(MouseDevice_feed,
+                 "? ? ? ? ? ? ? ? 89 68 ? 48 89 70 ? 57 41 54 41 55 41 56 41 57 48 83 EC ? 44 0F B7 BC 24 ? ? ? ? 48 8B D9",
+                 SigType::Sig,
+                 0)
 };
 

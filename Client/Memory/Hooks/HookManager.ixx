@@ -15,11 +15,14 @@ module;
 #include <minhook/MinHook.h>
 
 export module HookManager;
+import SigManager;
 
 export class HookManager
 {
 public:
     struct FuncHook { virtual void Initialize() = 0; virtual ~FuncHook() = default; };
+
+    // Input hooks are implemented as self-registering modules; no auto-install here
 
     HookManager()
     {
@@ -163,6 +166,7 @@ public:
             std::cout << "[Hook] Initializing hook object" << std::endl;
             hookObj->Initialize();
         }
+        // Self-registering hooks will install themselves via HookRegistry
     }
 
     std::size_t ownedCount() const { return ownedHooks.size(); }
@@ -189,6 +193,8 @@ private:
         }
         return initialized;
     }
+
+    // No built-in detours in the manager
 
     std::vector<std::unique_ptr<FuncHook>> ownedHooks;
     std::unordered_set<void*> targets;

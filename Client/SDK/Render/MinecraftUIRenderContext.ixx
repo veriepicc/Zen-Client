@@ -16,6 +16,7 @@ import BedrockTextureData;
 import Color;
 import HashedString;
 import Math;
+import RectangleArea;
 
 export class MinecraftUIRenderContext
 {
@@ -68,6 +69,36 @@ public:
     void flushImages(mce::Color &color, float opacity, HashedString &hashedString)
     {
         Memory::CallVFunc<void, mce::Color&, float, HashedString&>(9, this, color, opacity, hashedString);
+    }
+
+    void enableScissorTest(const SDK::RectangleArea& rect)
+    {
+        Memory::CallVFunc<void, const SDK::RectangleArea&>(18, this, rect);
+    }
+
+    void disableScissorTest()
+    {
+        Memory::CallVFunc<void>(19, this);
+    }
+
+    void setClippingRectangle(const SDK::RectangleArea& rect)
+    {
+        Memory::CallVFunc<void, const SDK::RectangleArea&>(20, this, rect);
+    }
+
+    void setFullClippingRectangle()
+    {
+        Memory::CallVFunc<void>(21, this);
+    }
+
+    void saveCurrentClippingRectangle()
+    {
+        Memory::CallVFunc<void>(22, this);
+    }
+
+    void restoreSavedClippingRectangle()
+    {
+        Memory::CallVFunc<void>(23, this);
     }
 
     void reloadTexture(const ResourceLocation& location)

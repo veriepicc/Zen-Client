@@ -20,24 +20,62 @@ import Tesselator;
 import Math;
 import TexturePtr;
 import Color;
+import BedrockTextureData;
+import RectangleArea;
 
 namespace Hooks::Render::SetupAndRender
 {
     using SetupAndRenderFunction = void(*)(void*, MinecraftUIRenderContext*);
+    using DrawImageFunction = void(*)(MinecraftUIRenderContext*, BedrockTextureData*, Math::Vec2<float>*, Math::Vec2<float>*, Math::Vec2<float>*, Math::Vec2<float>*, bool);
 
     struct State
     {
         static inline SetupAndRenderFunction originalFunction = nullptr;
         static inline bool imageInitialized = false;
         static inline TexturePtr imageTexture{};
+        static inline DrawImageFunction originalDrawImage = nullptr;
+        static inline bool drewOnceThisFrame = false;
     };
+
+    inline void DrawImageDetour(MinecraftUIRenderContext* ctx,
+                                BedrockTextureData* tex,
+                                Math::Vec2<float>* pos,
+                                Math::Vec2<float>* size,
+                                Math::Vec2<float>* uvPos,
+                                Math::Vec2<float>* uvSize,
+                                bool flag)
+    {
+        if (!State::drewOnceThisFrame && State::imageInitialized && State::imageTexture.clientTexture)
+        {
+            auto p = Math::Vec2<float>(50.f, 50.f);
+            auto s = Math::Vec2<float>(256.f, 256.f);
+            auto up = Math::Vec2<float>(0.f, 0.f);
+            auto us = Math::Vec2<float>(1.f, 1.f);
+            // Clip to a smaller rect to test scissor; save/restore around our draw only
+            ctx->saveCurrentClippingRectangle();
+            // Engine expects x,y,width,height. Set then enable.
+            auto clip = SDK::RectangleArea::FromLTRB(80.f, 80.f, 220.f, 220.f);
+            ctx->setClippingRectangle(clip);
+            ctx->enableScissorTest(clip);
+            State::originalDrawImage(ctx, State::imageTexture.clientTexture.get(), &p, &s, &up, &us, false);
+            mce::Color color(1.f, 1.f, 1.f, 1.f);
+            HashedString pass("ui_textured");
+            ctx->flushImages(color, 1.f, pass);
+            ctx->restoreSavedClippingRectangle();
+            State::drewOnceThisFrame = true;
+        }
+        State::originalDrawImage(ctx, tex, pos, size, uvPos, uvSize, flag);
+    }
 
     inline void Detour(void* screenView, MinecraftUIRenderContext* renderContext)
     {
-        if (State::originalFunction)
-            State::originalFunction(screenView, renderContext);
+        if (!renderContext) {
+            if (State::originalFunction) State::originalFunction(screenView, renderContext);
+            return;
+        }
 
-        if (!renderContext) return;
+        // Per-frame begin: reset once-per-frame guard
+        State::drewOnceThisFrame = false;
 
         // Initialize external PNG texture once
         if (!State::imageInitialized)
@@ -51,26 +89,23 @@ namespace Hooks::Render::SetupAndRender
                 if (!State::imageTexture.clientTexture) {
                     // Hint the engine to pull it in
                     ResourceLocation rl(path, true);
-                  //  renderContext->touchTexture(rl);
+                    renderContext->touchTexture(rl);
                 }
                 State::imageInitialized = State::imageTexture.clientTexture != nullptr;
             }
         }
 
-        // Draw if texture is ready
-        if (State::imageInitialized)
+        // Install drawImage vfunc hook once so we can inject before other UI draws
+        if (!State::originalDrawImage)
         {
-            auto pos = Math::Vec2<float>(50.f, 50.f);
-            auto size = Math::Vec2<float>(256.f, 256.f);
-            auto uvPos = Math::Vec2<float>(0.f, 0.f);
-            auto uvSize = Math::Vec2<float>(1.f, 1.f);
-
-            renderContext->drawImage(State::imageTexture, pos, size, uvPos, uvSize);
-
-            mce::Color color(1.f, 1.f, 1.f, 1.f);
-            HashedString pass("ui_textured");
-            renderContext->flushImages(color, 1.f, pass);
+            void** vtable = *reinterpret_cast<void***>(renderContext);
+            void* target = vtable[7];
+            auto& hookManager = GetHookManager();
+            hookManager.hook<DrawImageFunction>(target, DrawImageDetour, &State::originalDrawImage);
         }
+
+        if (State::originalFunction)
+            State::originalFunction(screenView, renderContext);
     }
 }
 
