@@ -64,6 +64,7 @@ namespace Hooks::Render::SetupAndRender
             HashedString pass("ui_textured");
             ctx->flushImages(color, 1.f, pass);
             ctx->restoreSavedClippingRectangle();
+            ctx->disableScissorTest();
             State::drewOnceThisFrame = true;
         }
         State::originalDrawImage(ctx, tex, pos, size, uvPos, uvSize, flag);
@@ -106,7 +107,11 @@ namespace Hooks::Render::SetupAndRender
             hookManager.hook<DrawImageFunction>(target, DrawImageDetour, &State::originalDrawImage);
         }
 
-        // ImGui demo: init and draw once per frame
+        // Ensure we let the game render first so our ImGui overlay draws on top
+        if (State::originalFunction)
+            State::originalFunction(screenView, renderContext);
+
+        // ImGui demo: init once, then render after original UI to ensure top-most
         static bool imguiInit = false;
         if (!imguiInit)
         {
@@ -117,8 +122,34 @@ namespace Hooks::Render::SetupAndRender
         // Demo frame with approximate sizes; these can be sourced from GuiData later
         ImGui_ImplBigRat::Demo(renderContext, 1.0f / 60.0f, 1280.0f, 720.0f, 1.0f, 1.0f);
 
-        if (State::originalFunction)
-            State::originalFunction(screenView, renderContext);
+        // Quick validation draw using tessellator + our dog texture via MeshHelpers
+        // If this textured quad appears, the material/texture path is good.
+        if (State::imageTexture.clientTexture)
+        {
+            ScreenContext* sc = renderContext->getScreenContext();
+            Tessellator* tess = sc->getTessellator();
+            HashedString pass("ui_textured");
+            MaterialPtr* mat = MaterialPtr::createMaterial(pass);
+            tess->resetTransform(false);
+            float x = 420.f, y = 120.f, w = 128.f, h = 128.f;
+            tess->begin(mce::PrimitiveMode::TriangleList, 6, false);
+            mce::Color c(1.f, 1.f, 1.f, 1.f);
+            // tri 1
+            tess->color(c.r, c.g, c.b, c.a);
+            tess->vertexUV(x, y, 0.f, 0.f, 0.f);
+            tess->color(c.r, c.g, c.b, c.a);
+            tess->vertexUV(x + w, y, 0.f, 1.f, 0.f);
+            tess->color(c.r, c.g, c.b, c.a);
+            tess->vertexUV(x + w, y + h, 0.f, 1.f, 1.f);
+            // tri 2
+            tess->color(c.r, c.g, c.b, c.a);
+            tess->vertexUV(x, y, 0.f, 0.f, 0.f);
+            tess->color(c.r, c.g, c.b, c.a);
+            tess->vertexUV(x + w, y + h, 0.f, 1.f, 1.f);
+            tess->color(c.r, c.g, c.b, c.a);
+            tess->vertexUV(x, y + h, 0.f, 0.f, 1.f);
+            MeshHelpers::renderMeshImmediately2(sc, tess, mat, *State::imageTexture.clientTexture);
+        }
     }
 }
 
