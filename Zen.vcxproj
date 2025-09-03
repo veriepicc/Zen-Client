@@ -246,6 +246,10 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
+    <ClCompile Include="Client\SDK\Render\GuiData.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
     <ClCompile Include="Client\SDK\Tesselator\ScreenContext.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>

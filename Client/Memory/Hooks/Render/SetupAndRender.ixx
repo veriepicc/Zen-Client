@@ -47,24 +47,10 @@ namespace Hooks::Render::SetupAndRender
                                 Math::Vec2<float>* uvSize,
                                 bool flag)
     {
-        if (!State::drewOnceThisFrame && State::imageInitialized && State::imageTexture.clientTexture)
+        // On the first image draw of the frame, render ImGui so it appears underneath later UI
+        if (!State::drewOnceThisFrame)
         {
-            auto p = Math::Vec2<float>(50.f, 50.f);
-            auto s = Math::Vec2<float>(256.f, 256.f);
-            auto up = Math::Vec2<float>(0.f, 0.f);
-            auto us = Math::Vec2<float>(1.f, 1.f);
-            // Clip to a smaller rect to test scissor; save/restore around our draw only
-            ctx->saveCurrentClippingRectangle();
-            // Engine expects x,y,width,height. Set then enable.
-            auto clip = SDK::RectangleArea::FromLTRB(80.f, 80.f, 220.f, 220.f);
-            ctx->setClippingRectangle(clip);
-            ctx->enableScissorTest(clip);
-            State::originalDrawImage(ctx, State::imageTexture.clientTexture.get(), &p, &s, &up, &us, false);
-            mce::Color color(1.f, 1.f, 1.f, 1.f);
-            HashedString pass("ui_textured");
-            ctx->flushImages(color, 1.f, pass);
-            ctx->restoreSavedClippingRectangle();
-            ctx->disableScissorTest();
+            ImGui_ImplBigRat::Demo(ctx, 1.0f / 60.0f, 0.0f, 0.0f, 1.0f, 1.0f);
             State::drewOnceThisFrame = true;
         }
         State::originalDrawImage(ctx, tex, pos, size, uvPos, uvSize, flag);
@@ -98,20 +84,16 @@ namespace Hooks::Render::SetupAndRender
         //    }
         //}
         //
-        //// Install drawImage vfunc hook once so we can inject before other UI draws
-        //if (!State::originalDrawImage)
-        //{
-        //    void** vtable = *reinterpret_cast<void***>(renderContext);
-        //    void* target = vtable[7];
-        //    auto& hookManager = GetHookManager();
-        //    hookManager.hook<DrawImageFunction>(target, DrawImageDetour, &State::originalDrawImage);
-        //}
+        // Install drawImage vfunc hook once so we can inject before other UI draws
+        if (!State::originalDrawImage)
+        {
+            void** vtable = *reinterpret_cast<void***>(renderContext);
+            void* target = vtable[7];
+            auto& hookManager = GetHookManager();
+            hookManager.hook<DrawImageFunction>(target, DrawImageDetour, &State::originalDrawImage);
+        }
 
-        // Ensure we let the game render first so our ImGui overlay draws on top
-        if (State::originalFunction)
-            State::originalFunction(screenView, renderContext);
-
-        // ImGui demo: init once, then render after original UI to ensure top-most
+        // ImGui: render first so it appears below the game's UI
         static bool imguiInit = false;
         if (!imguiInit)
         {
@@ -119,8 +101,9 @@ namespace Hooks::Render::SetupAndRender
             imguiInit = true;
         }
 
-        // Demo frame with approximate sizes; these can be sourced from GuiData later
-        ImGui_ImplBigRat::Demo(renderContext, 1.0f / 60.0f, 1280.0f, 720.0f, 1.0f, 1.0f);
+        // Then let the game render its UI (DrawImageDetour will inject ImGui before first image)
+        if (State::originalFunction)
+            State::originalFunction(screenView, renderContext);
 
         // Quick validation draw using tessellator + our dog texture via MeshHelpers
         // If this textured quad appears, the material/texture path is good.

@@ -9,6 +9,7 @@ import Tesselator;
 import MaterialPtr;
 import BedrockTextureData;
 import BedrockTexture;
+import TexturePtr;
 
 export namespace MeshHelpers {
 	void renderMeshImmediately(ScreenContext* sc, Tessellator* tess, MaterialPtr* mat) {
@@ -25,7 +26,17 @@ export namespace MeshHelpers {
 		}
 		Memory::CallFunc<void, ScreenContext*, Tessellator*, MaterialPtr*, BedrockTextureData&, char*>(func, sc, tess, mat, texture, pad);
 	}
-	// Alternative textured path using BedrockTexture& (some builds expect this)
+
+	void renderMeshWithTexturePtr(ScreenContext* sc, Tessellator* tess, MaterialPtr* mat, TexturePtr& texturePtr) {
+		char pad[0x58]{};
+		auto func = SigManager::MeshHelper_renderMeshImmediately2;
+		if (!func) {
+			std::cout << "[MeshHelpers] renderMeshWithTexturePtr signature unresolved" << std::endl;
+			return;
+		}
+		Memory::CallFunc<void, ScreenContext*, Tessellator*, MaterialPtr*, TexturePtr&, char*>(func, sc, tess, mat, texturePtr, pad);
+	}
+	
 	void renderMeshWithBedrock(ScreenContext* sc, Tessellator* tess, MaterialPtr* mat, BedrockTexture& texture) {
 		char pad[0x58]{};
 		auto func = SigManager::MeshHelper_renderMeshImmediately2;

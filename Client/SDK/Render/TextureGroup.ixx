@@ -13,8 +13,19 @@ import Memory;
 import OffsetManager;
 import SigManager;
 import TexturePtr;
+import Math;
 
-namespace cg { class ImageBuffer {}; };
+export namespace cg {
+    export class ImageBuffer {
+    public:
+        void* blob{nullptr};
+        int width{0};
+        int height{0};
+        int bytesPerPixel{0};
+        ImageBuffer() = default;
+        ImageBuffer(void* data, int w, int h, int bpp) : blob(data), width(w), height(h), bytesPerPixel(bpp) {}
+    };
+};
 export class TextureGroup : public mce::TextureGroupBase {
 public:
     std::map<ResourceLocation, BedrockTexture, ResourceLocation::Less>& getLoadedTextures() {

@@ -4,8 +4,6 @@ module;
 #include <windows.h>
 #include <wincodec.h>
 #include <objidl.h>
-#include <iostream>
-#include <fstream>
 
 export module imgui_impl_bigrat;
 
@@ -21,6 +19,10 @@ import BedrockTextureData;
 import TexturePtr;
 import Math;
 import Color;
+import TextureGroup;
+import BedrockTexture;
+import OffsetManager;
+import GuiData;
 
 namespace BigRatGlue
 {
@@ -39,8 +41,26 @@ namespace BigRatGlue
         static MaterialPtr* mat = nullptr;
         if (!mat)
         {
+            // Prefer engine's RenderMaterialGroup::ui if available
             HashedString hs("ui_textured");
-            mat = MaterialPtr::createMaterial(hs);
+            mat = MaterialPtr::createUIMaterial(hs);
+            if (!mat)
+            {
+                // Fallbacks
+                const char* candidates[] = {
+                    "ui_textured",
+                    "ui_textured_alpha",
+                    "ui_textured_unlit",
+                    "ui_textured_and_blend"
+                };
+                for (auto* name : candidates)
+                {
+                    HashedString h(name);
+                    auto* m = MaterialPtr::createMaterial(h);
+                    if (m) { mat = m; break; }
+                }
+            }
+            //
         }
         return mat;
     }
@@ -103,46 +123,46 @@ namespace BigRatGlue
         HRESULT hr;
 
         hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) { std::cout << "[BigRat.WIC] CoInitializeEx failed: 0x" << std::hex << hr << std::endl; return false; }
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) { return false; }
         
         hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFactory));
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] CoCreateInstance failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pFactory->CreateStream(&pStream);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] CreateStream failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pStream->InitializeFromFilename(path, GENERIC_WRITE);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] InitializeFromFilename failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
 
         hr = pFactory->CreateEncoder(GUID_ContainerFormatPng, nullptr, &pEncoder);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] CreateEncoder failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pEncoder->Initialize(pStream, WICBitmapEncoderNoCache);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] Encoder::Initialize failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
 
         hr = pEncoder->CreateNewFrame(&pFrame, &pProps);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] CreateNewFrame failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pFrame->Initialize(pProps);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] Frame::Initialize failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pFrame->SetSize(width, height);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] SetSize failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pFactory->CreateBitmapFromMemory(
             width, height, GUID_WICPixelFormat32bppRGBA,
             static_cast<UINT>(width * 4), static_cast<UINT>(width * 4 * height),
             const_cast<BYTE*>(pixels), &pBitmap);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] CreateBitmapFromMemory failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pFrame->WriteSource(pBitmap, nullptr);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] WriteSource failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pFrame->Commit();
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] Frame::Commit failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pEncoder->Commit();
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC] Encoder::Commit failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         ok = true;
     cleanup:
@@ -169,46 +189,46 @@ namespace BigRatGlue
         HRESULT hr;
 
         hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) { std::cout << "[BigRat.WIC.Mem] CoInitializeEx failed: 0x" << std::hex << hr << std::endl; return out; }
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) { return out; }
         
         hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFactory));
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] CoCreateInstance failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
 
         hr = CreateStreamOnHGlobal(nullptr, TRUE, &pStream);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] CreateStreamOnHGlobal failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
 
         hr = pFactory->CreateEncoder(GUID_ContainerFormatPng, nullptr, &pEncoder);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] CreateEncoder failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
 
         hr = pEncoder->Initialize(pStream, WICBitmapEncoderNoCache);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] Encoder::Initialize failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
 
         hr = pEncoder->CreateNewFrame(&pFrame, &pProps);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] CreateNewFrame failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pFrame->Initialize(pProps);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] Frame::Initialize failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
 
         hr = pFrame->SetSize(width, height);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] SetSize failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
 
         hr = pFactory->CreateBitmapFromMemory(
             width, height, GUID_WICPixelFormat32bppRGBA,
             static_cast<UINT>(width * 4), static_cast<UINT>(width * 4 * height),
             const_cast<BYTE*>(pixels), &pBitmap);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] CreateBitmapFromMemory failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pFrame->WriteSource(pBitmap, nullptr);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] WriteSource failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pFrame->Commit();
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] Frame::Commit failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         hr = pEncoder->Commit();
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] Encoder::Commit failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
 
         hr = GetHGlobalFromStream(pStream, &hMem);
-        if (FAILED(hr)) { std::cout << "[BigRat.WIC.Mem] GetHGlobalFromStream failed: 0x" << std::hex << hr << std::endl; goto cleanup; }
+        if (FAILED(hr)) { goto cleanup; }
         
         if (hMem)
         {
@@ -255,7 +275,6 @@ export namespace ImGui_ImplBigRat
         if (ImGui::GetCurrentContext() == nullptr)
         {
             ImGui::CreateContext();
-            std::cout << "[BigRat] Created ImGui context" << std::endl;
         }
         IMGUI_CHECKVERSION();
         GetState()->rc = rc;
@@ -263,9 +282,7 @@ export namespace ImGui_ImplBigRat
         io.BackendRendererName = "imgui_impl_bigrat";
         io.IniFilename = nullptr; // avoid off-screen persisted state
 
-        // Log relevant vtable slots to verify indices
-        void** vt = *reinterpret_cast<void***>(rc);
-        std::cout << "[BigRat] vtbl[29]=" << vt[29] << " [30]=" << vt[30] << " [31]=" << vt[31] << " [33]=" << vt[33] << std::endl;
+        //
 
         if (io.Fonts->Fonts.Size == 0)
         {
@@ -273,65 +290,41 @@ export namespace ImGui_ImplBigRat
             if (io.Fonts->Fonts.Size == 0)
             {
                 io.Fonts->AddFontDefault();
-                std::cout << "[BigRat] Fallback default font added" << std::endl;
-            }
-            else
-            {
-                std::cout << "[BigRat] Added segoeui.ttf" << std::endl;
             }
         }
 
         // Build RGBA32 atlas
         unsigned char* pixels = nullptr; int w = 0, h = 0; int bpp = 0;
         io.Fonts->GetTexDataAsRGBA32(&pixels, &w, &h, &bpp);
-        std::cout << "[BigRat] Atlas size=" << w << "x" << h << " bpp=" << bpp << " pixels=" << (void*)pixels << std::endl;
         if (!(pixels && w > 0 && h > 0)) return true;
 
-        // First try in-memory PNG bytes using WIC + HGLOBAL stream
-        std::string pngBytes = BigRatGlue::SaveRGBAtoPNGToMemory(pixels, w, h);
-        std::cout << "[BigRat] Memory blob size=" << pngBytes.size() << std::endl;
-        if (!pngBytes.empty())
+        // Reliable path: write PNG to file and load as external via getTexture
+        const wchar_t* atlasPath = L"C:/Users/veriepic/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/RoamingState/imgui_atlas.png";
+        bool fileOk = BigRatGlue::SaveRGBAtoPNG(atlasPath, pixels, w, h);
+        if (fileOk)
         {
-            // Use a unique namespace not colliding with default packs
-            TexturePtr tp;
-            ResourceLocation rl("bigrat/imgui_atlas", /*external*/false);
-            rc->getZippedTexture(tp, pngBytes, rl, /*forceReload*/true);
-            std::cout << "[BigRat] Uploaded via RL='bigrat/imgui_atlas' -> clientTexture=" << (void*)tp.clientTexture.get() << std::endl;
-
-            // Try to use returned TexturePtr first
-            if (tp.clientTexture)
+            GetState()->fontTexture = rc->createTexture("C:/Users/veriepic/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/RoamingState/imgui_atlas.png", true, true);
+            if (GetState()->fontTexture.clientTexture)
             {
-                GetState()->fontTexture = tp;
-                // Store a stable pointer to our TexturePtr so Render can bind per-cmd
-                io.Fonts->SetTexID((void*)&GetState()->fontTexture);
-                return true;
-            }
-
-            // Nudge the engine and fetch by RL to ensure pointer resolution
-            rc->touchTexture(rl);
-            TexturePtr fetched;
-            rc->getTexture(fetched, rl, /*forceReload*/false);
-            std::cout << "[BigRat] Fetched by RL -> clientTexture=" << (void*)fetched.clientTexture.get() << std::endl;
-
-            if (fetched.clientTexture)
-            {
-                GetState()->fontTexture = fetched;
                 io.Fonts->SetTexID((void*)&GetState()->fontTexture);
                 return true;
             }
         }
 
-        // Fallback to file-based path
-        const wchar_t* atlasPath = L"C:/Users/veriepic/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/RoamingState/imgui_atlas.png";
-        bool fileOk = BigRatGlue::SaveRGBAtoPNG(atlasPath, pixels, w, h);
-        std::cout << "[BigRat] Save atlas PNG " << (fileOk ? "ok" : "fail") << std::endl;
-        if (fileOk)
+        // Last resort: in-memory PNG (may map to missing texture on some builds)
+        std::string pngBytes = BigRatGlue::SaveRGBAtoPNGToMemory(pixels, w, h);
+        if (!pngBytes.empty())
         {
-            GetState()->fontTexture = rc->createTexture("C:/Users/veriepic/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/RoamingState/imgui_atlas.png", true, true);
-            std::cout << "[BigRat] Loaded atlas via file: clientTexture=" << (void*)GetState()->fontTexture.clientTexture.get() << std::endl;
-            if (GetState()->fontTexture.clientTexture)
+            TexturePtr tp;
+            ResourceLocation rl("bigrat/imgui_atlas", /*external*/false);
+            rc->getZippedTexture(tp, pngBytes, rl, /*forceReload*/true);
+            rc->touchTexture(rl);
+            TexturePtr fetched;
+            rc->getTexture(fetched, rl, /*forceReload*/false);
+            if (fetched.clientTexture)
             {
-                io.Fonts->SetTexID((void*)GetState()->fontTexture.clientTexture.get());
+                GetState()->fontTexture = fetched;
+                io.Fonts->SetTexID((void*)&GetState()->fontTexture);
                 return true;
             }
         }
@@ -344,21 +337,101 @@ export namespace ImGui_ImplBigRat
         GetState()->rc = nullptr;
     }
 
+    // Input bridge: to be called from input hooks
+    void AddMousePosEvent(float x, float y)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddMousePosEvent(x, y);
+    }
+
+    void AddMouseButtonEvent(int button, bool down)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddMouseButtonEvent(button, down);
+    }
+
+    void AddMouseWheelEvent(float wheel)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddMouseWheelEvent(0.0f, wheel);
+    }
+
+    void AddKeyEvent(int imguiKey, bool down)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddKeyEvent((ImGuiKey)imguiKey, down);
+    }
+
+    void AddInputCharactersUTF8(const char* text)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddInputCharactersUTF8(text);
+    }
+
     void NewFrame(float delta_time, float display_w, float display_h, float scale_x, float scale_y)
     {
         ImGuiIO& io = ImGui::GetIO();
         io.DeltaTime = (delta_time > 0.f) ? delta_time : (1.0f / 60.0f);
-        io.DisplaySize = ImVec2(display_w, display_h);
-        io.DisplayFramebufferScale = ImVec2(scale_x, scale_y);
-        static int frame = 0; if ((frame++ % 60) == 0)
-            std::cout << "[BigRat] NewFrame: size=" << display_w << "x" << display_h << " scale=" << scale_x << "," << scale_y << std::endl;
+
+        // Prefer GuiData sizes if available to avoid scaling mismatch
+        if (GetState()->rc)
+        {
+            void* ci = GetState()->rc->getClientInstance();
+            if (ci)
+            {
+                // Prefer strongly-typed access via GuiData wrapper
+                GuiData* gd = GuiData::fromClientInstance(ci);
+                if (gd)
+                {
+                    auto ss = gd->getScreenSize();
+                    auto sss = gd->getScreenSizeScaled();
+                    float gs = gd->getGuiScale();
+                    if (ss.x > 0 && ss.y > 0)
+                    {
+                        io.DisplaySize = ImVec2(ss.x, ss.y);
+                        // Framebuffer scale from scaled vs unscaled size when available
+                        if (ss.x != 0.0f && ss.y != 0.0f && sss.x > 0 && sss.y > 0)
+                        {
+                            io.DisplayFramebufferScale = ImVec2(
+                                sss.x / ss.x,
+                                sss.y / ss.y
+                            );
+                        }
+                        else
+                        {
+                            io.DisplayFramebufferScale = ImVec2(gs, gs);
+                        }
+                    }
+                    else
+                    {
+                        io.DisplaySize = ImVec2(display_w, display_h);
+                        io.DisplayFramebufferScale = ImVec2(scale_x, scale_y);
+                    }
+                }
+                else
+                {
+                    io.DisplaySize = ImVec2(display_w, display_h);
+                    io.DisplayFramebufferScale = ImVec2(scale_x, scale_y);
+                }
+            }
+            else
+            {
+                io.DisplaySize = ImVec2(display_w, display_h);
+                io.DisplayFramebufferScale = ImVec2(scale_x, scale_y);
+            }
+        }
+        else
+        {
+            io.DisplaySize = ImVec2(display_w, display_h);
+            io.DisplayFramebufferScale = ImVec2(scale_x, scale_y);
+        }
+        //
     }
 
     void RenderDrawData(ImDrawData* draw_data, MinecraftUIRenderContext* rc)
     {
         if (!rc || draw_data->CmdListsCount == 0)
         {
-            std::cout << "[BigRat] RenderDrawData: empty rc=" << (void*)rc << " lists=" << (draw_data ? draw_data->CmdListsCount : -1) << std::endl;
             return;
         }
 
@@ -370,8 +443,10 @@ export namespace ImGui_ImplBigRat
             tess->resetTransform(false);
         }
         MaterialPtr* material = BigRatGlue::GetUITexturedMaterial();
-        std::cout << "[BigRat] Render: lists=" << draw_data->CmdListsCount << " totalVtx=" << draw_data->TotalVtxCount
-                  << " sc=" << (void*)sc << " tess=" << (void*)tess << " mat=" << (void*)material << std::endl;
+        // Ensure our base clip is the full screen so ImGui's own clip rects are not intersected
+        rc->saveCurrentClippingRectangle();
+        rc->setFullClippingRectangle();
+        rc->disableScissorTest();
 
         ImVec2 clip_off = draw_data->DisplayPos;
         ImVec2 clip_scale = draw_data->FramebufferScale;
@@ -395,14 +470,9 @@ export namespace ImGui_ImplBigRat
                 // Our TexID carries a pointer to a TexturePtr we control
                 TexturePtr* texPtr = reinterpret_cast<TexturePtr*>(pcmd->GetTexID());
                 BedrockTextureData* texture = texPtr && texPtr->clientTexture ? texPtr->clientTexture.get() : nullptr;
-                if (logged < 8)
-                {
-                    std::cout << "[BigRat] cmd: elem=" << pcmd->ElemCount << " clip=(" << clip_min.x << "," << clip_min.y << ")-(" << clip_max.x << ") tex=" << (void*)texture << std::endl;
-                    ++logged;
-                }
+                //
 
-                // Only set clip if it actually intersects the framebuffer; otherwise skip it to
-                // avoid leaving global scissor state active unnecessarily.
+                // Always set scissor per ImGui's command so text and widgets clip correctly
                 if (clip_max.x > clip_min.x && clip_max.y > clip_min.y)
                 {
                     BigRatGlue::PushClip(rc);
@@ -413,11 +483,13 @@ export namespace ImGui_ImplBigRat
                 if (!texture) { if (clip_max.x > clip_min.x && clip_max.y > clip_min.y) BigRatGlue::PopClip(rc); continue; }
 
                 // ImGui indices are 16-bit absolute indices; ElemCount is number of indices.
-                // We submit triangles in batches of 3 indices.
-                tess->begin(mce::PrimitiveMode::TriangleList, (int)pcmd->ElemCount, false);
+                // Match reference: pass 0 for maxVertices, engine will handle.
+                tess->begin(mce::PrimitiveMode::TriangleList, 0, false);
+                // Bedrock UI expects identity transform; enforce per draw to avoid stale transforms
+                tess->resetTransform(false);
                 for (unsigned int idx = 0; idx < pcmd->ElemCount; idx += 3)
                 {
-                    // Use CW winding to match renderer expectations
+                    // Use 2,1,0 for CW winding (reference)
                     const ImDrawIdx i0 = idx_buffer[pcmd->IdxOffset + idx + 2];
                     const ImDrawIdx i1 = idx_buffer[pcmd->IdxOffset + idx + 1];
                     const ImDrawIdx i2 = idx_buffer[pcmd->IdxOffset + idx + 0];
@@ -451,18 +523,17 @@ export namespace ImGui_ImplBigRat
                     tess->vertexUV(x2, y2, 0.0f, v2.uv.x, v2.uv.y);
                 }
 
-                // Prefer BedrockTexture wrapper path to match engine's textured UI mesh call
-                if (texPtr && texPtr->clientTexture) {
-                    BedrockTexture wrapper;
-                    wrapper.bedrockTextureData = texPtr->clientTexture;
-                    MeshHelpers::renderMeshWithBedrock(sc, tess, material, wrapper);
-                } else if (texture) {
+                // Drive textured path with BedrockTextureData from TexID
+                if (texture)
+                {
                     BigRatGlue::RenderMeshTextured(sc, tess, material, *texture);
                 }
                 if (clip_max.x > clip_min.x && clip_max.y > clip_min.y)
                     BigRatGlue::PopClip(rc);
             }
         }
+        // Restore whatever clipping state the game had before our pass
+        rc->restoreSavedClippingRectangle();
     }
 
     void Demo(MinecraftUIRenderContext* rc, float delta_time, float display_w, float display_h, float scale_x = 1.0f, float scale_y = 1.0f)
@@ -470,8 +541,8 @@ export namespace ImGui_ImplBigRat
         if (!rc) return;
         NewFrame(delta_time, display_w, display_h, scale_x, scale_y);
         ImGui::NewFrame();
-        ImGui::SetNextWindowPos(ImVec2(60, 60), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(360, 200), ImGuiCond_Always);
+        ImGui::SetNextWindowPos(ImVec2(60, 60), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(360, 200), ImGuiCond_FirstUseEver);
         ImGui::Begin("BigRat Demo");
         ImGui::TextUnformatted("Hello from BigRat backend");
         static float v = 0.5f;
@@ -480,7 +551,6 @@ export namespace ImGui_ImplBigRat
         ImGui::Text("RL ptr: %p", GetState()->fontTexture.clientTexture.get());
         ImGui::End();
         ImGui::Render();
-        std::cout << "[BigRat] Demo: lists=" << (ImGui::GetDrawData() ? ImGui::GetDrawData()->CmdListsCount : -1) << std::endl;
         RenderDrawData(ImGui::GetDrawData(), rc);
     }
 }
