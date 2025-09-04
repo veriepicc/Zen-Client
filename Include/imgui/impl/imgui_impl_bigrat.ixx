@@ -19,6 +19,7 @@ import BedrockTextureData;
 import TexturePtr;
 import Math;
 import Color;
+import Utils;
 import TextureGroup;
 import BedrockTexture;
 import OffsetManager;
@@ -276,11 +277,12 @@ export namespace ImGui_ImplBigRat
         io.Fonts->GetTexDataAsRGBA32(&pixels, &w, &h, &bpp);
         if (!(pixels && w > 0 && h > 0)) return true;
 
-        const wchar_t* atlasPath = L"C:/Users/veriepic/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/RoamingState/imgui_atlas.png";
-        bool fileOk = BigRatGlue::SaveRGBAtoPNG(atlasPath, pixels, w, h);
+        std::string atlasPath = GetRoamingPath() + "\\imgui_atlas.png";
+        bool fileOk = BigRatGlue::SaveRGBAtoPNG(std::wstring(atlasPath.begin(), atlasPath.end()).c_str(), pixels, w, h);
+
         if (fileOk)
         {
-            GetState()->fontTexture = rc->createTexture("C:/Users/veriepic/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/RoamingState/imgui_atlas.png", true, true);
+            GetState()->fontTexture = rc->createTexture(atlasPath.c_str(), true, true);
             if (GetState()->fontTexture.clientTexture)
             {
                 io.Fonts->SetTexID((void*)&GetState()->fontTexture);

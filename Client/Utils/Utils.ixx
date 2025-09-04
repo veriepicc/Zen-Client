@@ -1,6 +1,8 @@
 module;
 #include <cstdint>
 #include <string>
+#include <filesystem>
+#include <wincodec.h>
 
 export module Utils;
 
@@ -39,3 +41,13 @@ export struct Color
     static consteval Color Blue()  { return Color(0, 0, 255, 255); }
 };
 
+export std::string GetRoamingPath() {
+    wchar_t* env;
+    size_t size;
+    if (!_wdupenv_s(&env, &size, L"localappdata") && env) {
+        std::wstring wstr = std::wstring(env).substr(0, lstrlenW(env) - 2) + L"RoamingState";
+        delete env;
+        return std::filesystem::path(wstr).string();
+    }
+    return {};
+}
