@@ -26,6 +26,7 @@ import GuiData;
 
 namespace BigRatGlue
 {
+    static constexpr bool BR_DISABLE_CLIP = true;
     inline ScreenContext* GetScreenContext(MinecraftUIRenderContext* rc)
     {
         return rc->getScreenContext();
@@ -41,12 +42,10 @@ namespace BigRatGlue
         static MaterialPtr* mat = nullptr;
         if (!mat)
         {
-            // Prefer engine's RenderMaterialGroup::ui if available
             HashedString hs("ui_textured");
             mat = MaterialPtr::createUIMaterial(hs);
             if (!mat)
             {
-                // Fallbacks
                 const char* candidates[] = {
                     "ui_textured",
                     "ui_textured_alpha",
@@ -60,7 +59,6 @@ namespace BigRatGlue
                     if (m) { mat = m; break; }
                 }
             }
-            //
         }
         return mat;
     }
@@ -90,25 +88,6 @@ namespace BigRatGlue
     inline void RenderMeshTextured(ScreenContext* sc, Tessellator* tess, MaterialPtr* mat, BedrockTextureData& tex)
     {
         MeshHelpers::renderMeshImmediately2(sc, tess, mat, tex);
-    }
-
-    inline void BindTextureForUI(MinecraftUIRenderContext* rc, TexturePtr& texture)
-    {
-        // Bind the texture to the UI pipeline by issuing a 1x1 hidden draw and flushing.
-        // We scissor to an empty rect so nothing becomes visible.
-        rc->saveCurrentClippingRectangle();
-        rc->setClippingRectangle(SDK::RectangleArea::FromLTRB(0.f, 0.f, 0.f, 0.f));
-        rc->enableScissorTest(SDK::RectangleArea::FromLTRB(0.f, 0.f, 0.f, 0.f));
-        auto p = Math::Vec2<float>(0.f, 0.f);
-        auto s = Math::Vec2<float>(1.f, 1.f);
-        auto up = Math::Vec2<float>(0.f, 0.f);
-        auto us = Math::Vec2<float>(1.f, 1.f);
-        rc->drawImage(texture, p, s, up, us);
-        mce::Color color(1.f, 1.f, 1.f, 1.f);
-        HashedString pass("ui_textured");
-        rc->flushImages(color, 1.f, pass);
-        rc->restoreSavedClippingRectangle();
-        rc->disableScissorTest();
     }
 
     static bool SaveRGBAtoPNG(const wchar_t* path, const unsigned char* pixels, int width, int height)
@@ -280,7 +259,7 @@ export namespace ImGui_ImplBigRat
         GetState()->rc = rc;
         ImGuiIO& io = ImGui::GetIO();
         io.BackendRendererName = "imgui_impl_bigrat";
-        io.IniFilename = nullptr; // avoid off-screen persisted state
+        io.IniFilename = nullptr;
 
         //
 
@@ -293,12 +272,10 @@ export namespace ImGui_ImplBigRat
             }
         }
 
-        // Build RGBA32 atlas
         unsigned char* pixels = nullptr; int w = 0, h = 0; int bpp = 0;
         io.Fonts->GetTexDataAsRGBA32(&pixels, &w, &h, &bpp);
         if (!(pixels && w > 0 && h > 0)) return true;
 
-        // Reliable path: write PNG to file and load as external via getTexture
         const wchar_t* atlasPath = L"C:/Users/veriepic/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/RoamingState/imgui_atlas.png";
         bool fileOk = BigRatGlue::SaveRGBAtoPNG(atlasPath, pixels, w, h);
         if (fileOk)
@@ -311,12 +288,11 @@ export namespace ImGui_ImplBigRat
             }
         }
 
-        // Last resort: in-memory PNG (may map to missing texture on some builds)
         std::string pngBytes = BigRatGlue::SaveRGBAtoPNGToMemory(pixels, w, h);
         if (!pngBytes.empty())
         {
             TexturePtr tp;
-            ResourceLocation rl("bigrat/imgui_atlas", /*external*/false);
+            ResourceLocation rl("bigrat/imgui_atlas", false);
             rc->getZippedTexture(tp, pngBytes, rl, /*forceReload*/true);
             rc->touchTexture(rl);
             TexturePtr fetched;
@@ -337,7 +313,6 @@ export namespace ImGui_ImplBigRat
         GetState()->rc = nullptr;
     }
 
-    // Input bridge: to be called from input hooks
     void AddMousePosEvent(float x, float y)
     {
         ImGuiIO& io = ImGui::GetIO();
@@ -373,13 +348,11 @@ export namespace ImGui_ImplBigRat
         ImGuiIO& io = ImGui::GetIO();
         io.DeltaTime = (delta_time > 0.f) ? delta_time : (1.0f / 60.0f);
 
-        // Prefer GuiData sizes if available to avoid scaling mismatch
         if (GetState()->rc)
         {
             void* ci = GetState()->rc->getClientInstance();
             if (ci)
             {
-                // Prefer strongly-typed access via GuiData wrapper
                 GuiData* gd = GuiData::fromClientInstance(ci);
                 if (gd)
                 {
@@ -389,7 +362,6 @@ export namespace ImGui_ImplBigRat
                     if (ss.x > 0 && ss.y > 0)
                     {
                         io.DisplaySize = ImVec2(ss.x, ss.y);
-                        // Framebuffer scale from scaled vs unscaled size when available
                         if (ss.x != 0.0f && ss.y != 0.0f && sss.x > 0 && sss.y > 0)
                         {
                             io.DisplayFramebufferScale = ImVec2(
@@ -425,7 +397,6 @@ export namespace ImGui_ImplBigRat
             io.DisplaySize = ImVec2(display_w, display_h);
             io.DisplayFramebufferScale = ImVec2(scale_x, scale_y);
         }
-        //
     }
 
     void RenderDrawData(ImDrawData* draw_data, MinecraftUIRenderContext* rc)
@@ -437,16 +408,11 @@ export namespace ImGui_ImplBigRat
 
         ScreenContext* sc = BigRatGlue::GetScreenContext(rc);
         Tessellator* tess = BigRatGlue::GetTessellator(sc);
-        // Ensure identity/UI transform so ImGui coordinates map 1:1 to pixels
         if (tess) {
-            // The UI pipeline expects a clean transform for screen-space quads
             tess->resetTransform(false);
         }
         MaterialPtr* material = BigRatGlue::GetUITexturedMaterial();
-        // Ensure our base clip is the full screen so ImGui's own clip rects are not intersected
         rc->saveCurrentClippingRectangle();
-        rc->setFullClippingRectangle();
-        rc->disableScissorTest();
 
         ImVec2 clip_off = draw_data->DisplayPos;
         ImVec2 clip_scale = draw_data->FramebufferScale;
@@ -463,33 +429,27 @@ export namespace ImGui_ImplBigRat
                 const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
                 if (pcmd->UserCallback) continue;
 
-                ImVec2 clip_min((pcmd->ClipRect.x - clip_off.x) * clip_scale.x,
-                                (pcmd->ClipRect.y - clip_off.y) * clip_scale.y);
-                ImVec2 clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x,
-                                (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
-                // Our TexID carries a pointer to a TexturePtr we control
                 TexturePtr* texPtr = reinterpret_cast<TexturePtr*>(pcmd->GetTexID());
                 BedrockTextureData* texture = texPtr && texPtr->clientTexture ? texPtr->clientTexture.get() : nullptr;
-                //
 
-                // Always set scissor per ImGui's command so text and widgets clip correctly
-                if (clip_max.x > clip_min.x && clip_max.y > clip_min.y)
+                ImVec2 clip_min((pcmd->ClipRect.x - clip_off.x) * clip_scale.x, (pcmd->ClipRect.y - clip_off.y) * clip_scale.y);
+                ImVec2 clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
+                if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
+                    continue;
+
+                // Apply or disable scissor per flag
+                if constexpr (!BigRatGlue::BR_DISABLE_CLIP)
                 {
-                    BigRatGlue::PushClip(rc);
                     auto rect = SDK::RectangleArea::FromLTRB(clip_min.x, clip_min.y, clip_max.x, clip_max.y);
                     BigRatGlue::SetClip(rc, rect);
                 }
 
-                if (!texture) { if (clip_max.x > clip_min.x && clip_max.y > clip_min.y) BigRatGlue::PopClip(rc); continue; }
-
-                // ImGui indices are 16-bit absolute indices; ElemCount is number of indices.
-                // Match reference: pass 0 for maxVertices, engine will handle.
+                // ImGui indices are 16-bit absolute; pass 0 for maxVertices
                 tess->begin(mce::PrimitiveMode::TriangleList, 0, false);
-                // Bedrock UI expects identity transform; enforce per draw to avoid stale transforms
                 tess->resetTransform(false);
                 for (unsigned int idx = 0; idx < pcmd->ElemCount; idx += 3)
                 {
-                    // Use 2,1,0 for CW winding (reference)
+                    // Use 2,1,0 for CW winding
                     const ImDrawIdx i0 = idx_buffer[pcmd->IdxOffset + idx + 2];
                     const ImDrawIdx i1 = idx_buffer[pcmd->IdxOffset + idx + 1];
                     const ImDrawIdx i2 = idx_buffer[pcmd->IdxOffset + idx + 0];
@@ -507,14 +467,13 @@ export namespace ImGui_ImplBigRat
                     ImVec4 c0 = colToFloat(v0.col);
                     ImVec4 c1 = colToFloat(v1.col);
                     ImVec4 c2 = colToFloat(v2.col);
-                    // Convert to framebuffer space (DisplayPos/Scale) so scissor matches ImGui
+                    // Convert to framebuffer space
                     const float x0 = (v0.pos.x - clip_off.x) * clip_scale.x;
                     const float y0 = (v0.pos.y - clip_off.y) * clip_scale.y;
                     const float x1 = (v1.pos.x - clip_off.x) * clip_scale.x;
                     const float y1 = (v1.pos.y - clip_off.y) * clip_scale.y;
                     const float x2 = (v2.pos.x - clip_off.x) * clip_scale.x;
                     const float y2 = (v2.pos.y - clip_off.y) * clip_scale.y;
-                    // Submit in screen-space; Bedrock UI expects origin at top-left and UV as-is
                     tess->color(c0.x, c0.y, c0.z, c0.w);
                     tess->vertexUV(x0, y0, 0.0f, v0.uv.x, v0.uv.y);
                     tess->color(c1.x, c1.y, c1.z, c1.w);
@@ -523,18 +482,22 @@ export namespace ImGui_ImplBigRat
                     tess->vertexUV(x2, y2, 0.0f, v2.uv.x, v2.uv.y);
                 }
 
-                // Drive textured path with BedrockTextureData from TexID
-                if (texture)
-                {
-                    BigRatGlue::RenderMeshTextured(sc, tess, material, *texture);
-                }
-                if (clip_max.x > clip_min.x && clip_max.y > clip_min.y)
-                    BigRatGlue::PopClip(rc);
-            }
+        if (texture)
+        {
+            BigRatGlue::RenderMeshTextured(sc, tess, material, *texture);
         }
-        // Restore whatever clipping state the game had before our pass
-        rc->restoreSavedClippingRectangle();
+        else
+        {
+            BigRatGlue::RenderMesh(sc, tess, material);
+        }
+            // After drawing, disable scissor if it was enabled
+            if constexpr (!BigRatGlue::BR_DISABLE_CLIP)
+                rc->disableScissorTest();
+        }
     }
+    // Restore whatever clipping state the game had before our pass
+    rc->restoreSavedClippingRectangle();
+}
 
     void Demo(MinecraftUIRenderContext* rc, float delta_time, float display_w, float display_h, float scale_x = 1.0f, float scale_y = 1.0f)
     {

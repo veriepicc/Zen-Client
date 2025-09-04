@@ -194,7 +194,6 @@ private:
         return initialized;
     }
 
-    // No built-in detours in the manager
 
     std::vector<std::unique_ptr<FuncHook>> ownedHooks;
     std::unordered_set<void*> targets;
@@ -202,7 +201,6 @@ private:
     mutable std::mutex mutex;
 };
 
-// Global accessor for convenience
 export inline HookManager& GetHookManager()
 {
     static HookManager instance;
@@ -244,7 +242,6 @@ export namespace HookRegistry
     }
 }
 
-// Simple C-style registry API similar to the reference
 export struct HookInfo { void** original; void* detour; void* target; };
 
 namespace HookInternal
