@@ -250,44 +250,20 @@ static BigRatState* GetState()
 
 export namespace ImGui_ImplBigRat
 {
-    bool Init(MinecraftUIRenderContext* rc)
-    {
-        if (ImGui::GetCurrentContext() == nullptr)
-        {
-            ImGui::CreateContext();
-        }
-        IMGUI_CHECKVERSION();
-        GetState()->rc = rc;
+    bool LoadFontAtlas(MinecraftUIRenderContext* rc) {
         ImGuiIO& io = ImGui::GetIO();
-        io.BackendRendererName = "imgui_impl_bigrat";
-        io.IniFilename = nullptr;
-
-        //
-
-        if (io.Fonts->Fonts.Size == 0)
-        {
-            io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/segoeui.ttf", 18.0f);
-            if (io.Fonts->Fonts.Size == 0)
-            {
-                io.Fonts->AddFontDefault();
-            }
-        }
 
         unsigned char* pixels = nullptr; int w = 0, h = 0; int bpp = 0;
         io.Fonts->GetTexDataAsRGBA32(&pixels, &w, &h, &bpp);
         if (!(pixels && w > 0 && h > 0)) return true;
 
         std::string atlasPath = GetRoamingPath() + "\\imgui_atlas.png";
-        bool fileOk = BigRatGlue::SaveRGBAtoPNG(std::wstring(atlasPath.begin(), atlasPath.end()).c_str(), pixels, w, h);
 
-        if (fileOk)
+        GetState()->fontTexture = rc->createTexture(atlasPath.c_str(), true, true);
+        if (GetState()->fontTexture.clientTexture)
         {
-            GetState()->fontTexture = rc->createTexture(atlasPath.c_str(), true, true);
-            if (GetState()->fontTexture.clientTexture)
-            {
-                io.Fonts->SetTexID((void*)&GetState()->fontTexture);
-                return true;
-            }
+            io.Fonts->SetTexID((void*)&GetState()->fontTexture);
+            return true;
         }
 
         std::string pngBytes = BigRatGlue::SaveRGBAtoPNGToMemory(pixels, w, h);
@@ -306,8 +282,44 @@ export namespace ImGui_ImplBigRat
                 return true;
             }
         }
+    }
 
-        return true;
+    bool Init(MinecraftUIRenderContext* rc)
+    {
+        if (ImGui::GetCurrentContext() == nullptr)
+        {
+            ImGui::CreateContext();
+        }
+        IMGUI_CHECKVERSION();
+        GetState()->rc = rc;
+        ImGuiIO& io = ImGui::GetIO();
+        io.BackendRendererName = "imgui_impl_bigrat";
+        io.IniFilename = nullptr;
+
+        //
+
+        ImGui::GetStyle().AntiAliasedLines = false;
+        ImGui::GetStyle().AntiAliasedFill = true;
+
+        if (io.Fonts->Fonts.Size == 0)
+        {
+            io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/segoeui.ttf", 48.0f);
+            if (io.Fonts->Fonts.Size == 0)
+            {
+                io.Fonts->AddFontDefault();
+            }
+        }
+
+        unsigned char* pixels = nullptr; int w = 0, h = 0; int bpp = 0;
+        io.Fonts->GetTexDataAsRGBA32(&pixels, &w, &h, &bpp);
+        if (!(pixels && w > 0 && h > 0)) return true;
+
+        std::string atlasPath = GetRoamingPath() + "\\imgui_atlas.png";
+        bool fileOk = BigRatGlue::SaveRGBAtoPNG(std::wstring(atlasPath.begin(), atlasPath.end()).c_str(), pixels, w, h);
+
+        if (fileOk)
+            return LoadFontAtlas(rc);
+        return false;
     }
 
     void Shutdown()
@@ -403,6 +415,14 @@ export namespace ImGui_ImplBigRat
 
     void RenderDrawData(ImDrawData* draw_data, MinecraftUIRenderContext* rc)
     {
+        static int i = 0;
+        i++;
+
+        if (i > 300) {
+            LoadFontAtlas(rc);
+            i = 0;
+        }
+
         if (!rc || draw_data->CmdListsCount == 0)
         {
             return;
@@ -447,7 +467,7 @@ export namespace ImGui_ImplBigRat
                 }
 
                 // ImGui indices are 16-bit absolute; pass 0 for maxVertices
-                tess->begin(mce::PrimitiveMode::TriangleList, 0, false);
+                tess->begin(mce::PrimitiveMode::TriangleList, 0, true);
                 tess->resetTransform(false);
                 for (unsigned int idx = 0; idx < pcmd->ElemCount; idx += 3)
                 {
@@ -506,15 +526,34 @@ export namespace ImGui_ImplBigRat
         if (!rc) return;
         NewFrame(delta_time, display_w, display_h, scale_x, scale_y);
         ImGui::NewFrame();
-        ImGui::SetNextWindowPos(ImVec2(60, 60), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSize(ImVec2(360, 200), ImGuiCond_FirstUseEver);
-        ImGui::Begin("BigRat Demo");
-        ImGui::TextUnformatted("Hello from BigRat backend");
-        static float v = 0.5f;
-        ImGui::SliderFloat("Value", &v, 0.f, 1.f);
-        ImGui::Text("Tex OK: %s", GetState()->fontTexture.clientTexture ? "yes" : "no");
-        ImGui::Text("RL ptr: %p", GetState()->fontTexture.clientTexture.get());
-        ImGui::End();
+        bool show = true;
+        ImGui::ShowDemoWindow(&show);
+        //ImGui::SetNextWindowPos(ImVec2(60, 60), ImGuiCond_FirstUseEver);
+        //ImGui::SetNextWindowSize(ImVec2(360, 200), ImGuiCond_FirstUseEver);
+        //ImGui::Begin("BigRat Demo");
+        //ImGui::TextUnformatted("Hello from BigRat backend");
+        //static float v = 0.5f;
+        //ImGui::SliderFloat("Value", &v, 0.f, 1.f);
+        //ImGui::Text("Tex OK: %s", GetState()->fontTexture.clientTexture ? "yes" : "no");
+        //ImGui::Text("RL ptr: %p", GetState()->fontTexture.clientTexture.get());
+
+        ImVec2 center_of_circle = ImVec2(100.0f, 100.0f);
+        float circle_radius = 50.0f;
+        ImU32 circle_color_outline = IM_COL32(255, 0, 0, 255); // Red outline
+        ImU32 circle_color_filled = IM_COL32(0, 255, 0, 255); // Green filled
+        int segments = 32; // For a reasonably smooth circle
+        float line_thickness = 2.0f;
+
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+        // Draw an outlined circle
+        draw_list->AddCircle(center_of_circle, circle_radius, circle_color_outline, segments, line_thickness);
+
+        // Draw a filled circle (offset for visibility)
+        draw_list->AddCircleFilled(ImVec2(center_of_circle.x + 120.0f, center_of_circle.y), circle_radius, circle_color_filled, segments);
+
+        ImGui::EndFrame();
+        //ImGui::End();
         ImGui::Render();
         RenderDrawData(ImGui::GetDrawData(), rc);
     }
