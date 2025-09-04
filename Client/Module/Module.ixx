@@ -15,6 +15,7 @@ module;
 export module Module;
 
 import Utils;
+import MinecraftUIRenderContext;
 
 export enum class Category
 {
@@ -102,7 +103,7 @@ public:
     virtual void onEnable() {}
     virtual void onDisable() {}
     virtual void onUpdate() {}
-    virtual void onRender() {}
+    virtual void onRender(MinecraftUIRenderContext* /*rc*/) {}
 
     using SettingList = std::vector<Setting>;
 
@@ -199,6 +200,17 @@ export namespace Modules
     export inline void Register(Module* module)
     {
         getRegistry().addModule(module);
+    }
+
+    export inline void RenderTick(MinecraftUIRenderContext* rc)
+    {
+        for (Module* module : All())
+        {
+            if (module != nullptr && module->enabledRef())
+            {
+                module->onRender(rc);
+            }
+        }
     }
 }
 

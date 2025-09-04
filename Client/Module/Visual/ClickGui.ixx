@@ -34,8 +34,7 @@ public:
                   << std::dec << std::endl;
     }
     void onDisable() override {}
-    void onUpdate() override {}
-    void onRender() override
+    void onUpdate() override 
     {
         static bool loggedOnce = false;
         if (!loggedOnce)

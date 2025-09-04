@@ -1,6 +1,9 @@
 module;
 #include <cstdint>
 #include <iostream>
+#include <string>
+#include <memory>
+#include "imgui/imgui.h"
 
 export module SetupAndRender;
 
@@ -24,6 +27,10 @@ import BedrockTextureData;
 import RectangleArea;
 // ImGui bridge
 import imgui_impl_bigrat;
+import Module;
+import ResourceLocation;
+import Utils;
+
 
 namespace Hooks::Render::SetupAndRender
 {
@@ -47,10 +54,48 @@ namespace Hooks::Render::SetupAndRender
                                 Math::Vec2<float>* uvSize,
                                 bool flag)
     {
-        // On the first image draw of the frame, render ImGui so it appears underneath later UI
+        // First image draw of the frame: submit our ImGui pass so it appears underneath game UI
         if (!State::drewOnceThisFrame)
         {
-            //ImGui_ImplBigRat::Demo(ctx, 1.0f / 60.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+            ImGui_ImplBigRat::NewFrame(1.0f / 60.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+            ImGui::NewFrame();
+            ImGui::ShowDemoWindow();
+            if (!State::imageTexture.clientTexture && State::imageTexture.resourceLocation)
+            {
+                TexturePtr fetched;
+                ctx->getTexture(fetched, *State::imageTexture.resourceLocation, /*forceReload*/false);
+                if (fetched.clientTexture)
+                {
+                    State::imageTexture = fetched;
+                }
+            }
+            ImGui::SetNextWindowPos(ImVec2(420, 120), ImGuiCond_FirstUseEver);
+            ImGui::Begin("Mart", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+            if (State::imageTexture.clientTexture)
+            {
+                ImGui::Image((ImTextureID)&State::imageTexture, ImVec2(128, 128));
+            }
+            else
+            {
+                ImGui::TextUnformatted("Loading dog texture...");
+            }
+            ImGui::End();
+            
+            Modules::RenderTick(ctx);
+            ImGui::Render();
+            ImGui_ImplBigRat::RenderDrawData(ImGui::GetDrawData(), ctx);
+
+            // If texture handle not yet valid, try to fetch it again (async load)
+            if (!State::imageTexture.clientTexture && State::imageTexture.resourceLocation)
+            {
+                TexturePtr fetched;
+                ctx->getTexture(fetched, *State::imageTexture.resourceLocation, /*forceReload*/false);
+                if (fetched.clientTexture)
+                {
+                    State::imageTexture = fetched;
+                }
+            }
+
             State::drewOnceThisFrame = true;
         }
         State::originalDrawImage(ctx, tex, pos, size, uvPos, uvSize, flag);
@@ -63,26 +108,28 @@ namespace Hooks::Render::SetupAndRender
             return;
         }
 
-        // Per-frame begin: reset once-per-frame guard
         State::drewOnceThisFrame = false;
 
-        //// Initialize external PNG texture once
-        //if (!State::imageInitialized)
-        //{
-        //    const std::string path = "C:/Users/veriepic/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/RoamingState/image.png";
-        //    // Strict PNG: simple extension check
-        //    if (path.size() >= 4 && (path.ends_with(".png") || path.ends_with(".PNG"))) {
-        //        auto tmp = renderContext->createTexture(path, /*external*/true, /*forceReload*/true);
-        //        State::imageTexture = std::move(tmp);
-        //        State::imageTexture.resourceLocation = std::make_shared<ResourceLocation>(ResourceLocation(path, true));
-        //        if (!State::imageTexture.clientTexture) {
-        //            // Hint the engine to pull it in
-        //            ResourceLocation rl(path, true);
-        //            renderContext->touchTexture(rl);
-        //        }
-        //        State::imageInitialized = State::imageTexture.clientTexture != nullptr;
-        //    }
-        //}
+        if (!State::imageInitialized)
+        {
+            std::string base = GetRoamingPath();
+            if (!base.empty())
+            {
+                for (char& ch : base) if (ch == '\\') ch = '/';
+                const std::string path = base + "/image.png";
+                auto rl = std::make_shared<ResourceLocation>(ResourceLocation(path, /*external*/true));
+                State::imageTexture.resourceLocation = rl;
+                TexturePtr tp = renderContext->createTexture(path, /*external*/true, /*forceReload*/true);
+                renderContext->touchTexture(*rl);
+                TexturePtr fetched;
+                renderContext->getTexture(fetched, *rl, /*forceReload*/false);
+                if (fetched.clientTexture)
+                {
+                    State::imageTexture = fetched;
+                }
+                State::imageInitialized = State::imageTexture.clientTexture != nullptr;
+            }
+        }
         //
         // Install drawImage vfunc hook once so we can inject before other UI draws
         if (!State::originalDrawImage)
@@ -93,7 +140,7 @@ namespace Hooks::Render::SetupAndRender
             hookManager.hook<DrawImageFunction>(target, DrawImageDetour, &State::originalDrawImage);
         }
 
-        // ImGui: render first so it appears below the game's UI
+        // Initialize ImGui backend once
         static bool imguiInit = false;
         if (!imguiInit)
         {
@@ -101,40 +148,10 @@ namespace Hooks::Render::SetupAndRender
             imguiInit = true;
         }
 
-        ImGui_ImplBigRat::Demo(renderContext, 1.0f / 60.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+        // ImGui rendering is executed in DrawImageDetour on first image draw each frame
 
-        // Then let the game render its UI (DrawImageDetour will inject ImGui before first image)
         if (State::originalFunction)
             State::originalFunction(screenView, renderContext);
-
-        // Quick validation draw using tessellator + our dog texture via MeshHelpers
-        // If this textured quad appears, the material/texture path is good.
-        //if (State::imageTexture.clientTexture)
-        //{
-        //    ScreenContext* sc = renderContext->getScreenContext();
-        //    Tessellator* tess = sc->getTessellator();
-        //    HashedString pass("ui_textured");
-        //    MaterialPtr* mat = MaterialPtr::createMaterial(pass);
-        //    tess->resetTransform(false);
-        //    float x = 420.f, y = 120.f, w = 128.f, h = 128.f;
-        //    tess->begin(mce::PrimitiveMode::TriangleList, 6, false);
-        //    mce::Color c(1.f, 1.f, 1.f, 1.f);
-        //    // tri 1
-        //    tess->color(c.r, c.g, c.b, c.a);
-        //    tess->vertexUV(x, y, 0.f, 0.f, 0.f);
-        //    tess->color(c.r, c.g, c.b, c.a);
-        //    tess->vertexUV(x + w, y, 0.f, 1.f, 0.f);
-        //    tess->color(c.r, c.g, c.b, c.a);
-        //    tess->vertexUV(x + w, y + h, 0.f, 1.f, 1.f);
-        //    // tri 2
-        //    tess->color(c.r, c.g, c.b, c.a);
-        //    tess->vertexUV(x, y, 0.f, 0.f, 0.f);
-        //    tess->color(c.r, c.g, c.b, c.a);
-        //    tess->vertexUV(x + w, y + h, 0.f, 1.f, 1.f);
-        //    tess->color(c.r, c.g, c.b, c.a);
-        //    tess->vertexUV(x, y + h, 0.f, 0.f, 1.f);
-        //    MeshHelpers::renderMeshImmediately2(sc, tess, mat, *State::imageTexture.clientTexture);
-        //}
     }
 }
 

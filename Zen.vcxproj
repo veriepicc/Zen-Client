@@ -337,6 +337,7 @@
     <ClCompile Include="Client\Module\Module.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
+      <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="Client\Module\Combat\Killaura.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
