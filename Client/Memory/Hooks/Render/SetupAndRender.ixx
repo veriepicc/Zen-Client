@@ -50,7 +50,7 @@ namespace Hooks::Render::SetupAndRender
         // On the first image draw of the frame, render ImGui so it appears underneath later UI
         if (!State::drewOnceThisFrame)
         {
-            ImGui_ImplBigRat::Demo(ctx, 1.0f / 60.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+            //ImGui_ImplBigRat::Demo(ctx, 1.0f / 60.0f, 0.0f, 0.0f, 1.0f, 1.0f);
             State::drewOnceThisFrame = true;
         }
         State::originalDrawImage(ctx, tex, pos, size, uvPos, uvSize, flag);
@@ -100,6 +100,8 @@ namespace Hooks::Render::SetupAndRender
             ImGui_ImplBigRat::Init(renderContext);
             imguiInit = true;
         }
+
+        ImGui_ImplBigRat::Demo(renderContext, 1.0f / 60.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
         // Then let the game render its UI (DrawImageDetour will inject ImGui before first image)
         if (State::originalFunction)

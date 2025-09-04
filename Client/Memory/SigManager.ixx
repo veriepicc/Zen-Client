@@ -131,7 +131,11 @@ public:
                  0)
     // TextureGroup::uploadTexture(resource, cg::ImageBuffer) - version dependent
     REGISTER_SIG(TextureGroup_uploadTexture_imageBuffer,
-                 "48 89 5C 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 45 ? 4D 8B F8 4C 8B EA 4C 8B E1",
+                 "48 89 ? ? ? 55 56 57 41 ? 41 ? 48 8D ? ? ? 48 81 EC ? ? ? ? 48 8B ? ? ? ? ? 48 33 ? 48 89 ? ? 49 8B ? 48 8B ? 48 8B ? 4C 89 ? ? 48 8D",
+                 SigType::Sig,
+                 0)
+    REGISTER_SIG(TextureGroup_unloadAllTextures,
+                 "48 89 ? ? ? 48 89 ? ? ? 48 89 ? ? ? 57 41 ? 41 ? 48 83 EC ? 4C 8B ? 48 8B ? ? ? ? ? 48 8B ? 45 33",
                  SigType::Sig,
                  0)
 

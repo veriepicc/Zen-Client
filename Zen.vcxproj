@@ -306,6 +306,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
+    <ClCompile Include="Include\imgui\imgui_demo.cpp" />
     <ClCompile Include="Include\imgui\impl\imgui_impl_bigrat.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
@@ -327,6 +328,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
+    <ClInclude Include="Include\imgui\imgui.h" />
     <ClInclude Include="Include\imgui\impl\imgui_impl_bigrat.h" />
     <ClCompile Include="Client\Memory\Memory.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

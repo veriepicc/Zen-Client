@@ -32,8 +32,12 @@ public:
         return Memory::MemberAt<std::map<ResourceLocation, BedrockTexture, ResourceLocation::Less>>(this, Offsets::TextureGroup_base + Offsets::TextureGroup_loadedTextures);
     }
 
-    BedrockTexture* uploadTexture(TextureGroup* group, ResourceLocation& resource, cg::ImageBuffer imageBuffer) {
+    BedrockTexture* uploadTexture(ResourceLocation& resource, cg::ImageBuffer imageBuffer) {
         return Memory::CallFunc<BedrockTexture*, TextureGroup*, ResourceLocation&, cg::ImageBuffer>(SigManager::TextureGroup_uploadTexture_imageBuffer, this, resource, imageBuffer);
+    }
+
+    void unloadAllTextures(__int64 a2 = 0, __int64 a3 = 0, __int64 a4 = 0) {
+        Memory::CallFunc<void, TextureGroup*, __int64, __int64, __int64>(SigManager::TextureGroup_unloadAllTextures, this, a2, a3, a4);
     }
 
     // Note: actual virtual getTexture is provided by the engine; we don't re-declare here to avoid mismatched vtable.

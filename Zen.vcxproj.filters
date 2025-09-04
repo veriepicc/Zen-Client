@@ -39,9 +39,6 @@
     <ClCompile Include="Client\Module\Module.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Client\Module\ModuleManager.ixx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Client\Module\Combat\Killaura.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -75,9 +72,6 @@
     <ClCompile Include="Include\minhook\hde\hde64.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Client\Memory\Hooks\Render\RenderHook.ixx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -87,8 +81,88 @@
     <ClCompile Include="Client\SDK\Render\HashedString.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Client\SDK\Render\TextHolder.ixx">
+    <ClCompile Include="Client\SDK\Render\MaterialPtr.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Client\SDK\Render\MeshHelpers.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\RectangleArea.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\ResourceLocation.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\TexturePtr.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\Nineslice.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\Color.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\BedrockTextureData.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\BedrockTexture.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\TextureGroupBase.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\TextureGroup.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Render\GuiData.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Tesselator\ScreenContext.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Tesselator\PrimitiveMode.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Tesselator\Tesselator.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\SDK.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\Hooks\Render\SetupAndRender.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\Hooks\Input\Keyboard.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\Hooks\Input\Mouse.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\imgui\impl\imgui_impl_bigrat.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\imgui\imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\imgui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\imgui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\imgui\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Include\imgui\impl\imgui_impl_bigrat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\imgui\imgui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
