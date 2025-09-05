@@ -3,6 +3,7 @@ module;
 #include <string>
 #include <filesystem>
 #include <wincodec.h>
+#pragma comment(lib, "urlmon.lib")
 
 export module Utils;
 
@@ -41,13 +42,19 @@ export struct Color
     static consteval Color Blue()  { return Color(0, 0, 255, 255); }
 };
 
-export std::string GetRoamingPath() {
-    wchar_t* env;
-    size_t size;
-    if (!_wdupenv_s(&env, &size, L"localappdata") && env) {
-        std::wstring wstr = std::wstring(env).substr(0, lstrlenW(env) - 2) + L"RoamingState";
-        delete env;
-        return std::filesystem::path(wstr).string();
+export namespace Utils {
+    std::string GetRoamingPath() {
+        std::string path;
+        wchar_t* env;
+        size_t size;
+        if (!_wdupenv_s(&env, &size, L"localappdata") && env && path.empty()) {
+            std::wstring wstr = std::wstring(env).substr(0, lstrlenW(env) - 2) + L"RoamingState";
+            delete env;
+            path = std::filesystem::path(wstr).string();
+        }
+        return path;
     }
-    return {};
+    void DownloadFile(std::string url, std::string path) {
+        URLDownloadToFileA(nullptr, url.c_str(), path.c_str(), 0, NULL);
+    }
 }
