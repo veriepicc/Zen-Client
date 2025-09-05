@@ -12,7 +12,6 @@ import HookManager;
 import SigManager;
 import SetupAndRender;
 import Module;
-import ClickGui;
 
 namespace Zen::Detail
 {
