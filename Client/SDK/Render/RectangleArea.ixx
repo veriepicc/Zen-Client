@@ -16,7 +16,7 @@ export namespace SDK {
         // Helper to construct from LTRB
         static constexpr RectangleArea FromLTRB(float l, float t, float r, float b)
         {
-            return RectangleArea(l, t, r - l, b - t);
+            return RectangleArea(l, t, r, b);
         }
     };
 }

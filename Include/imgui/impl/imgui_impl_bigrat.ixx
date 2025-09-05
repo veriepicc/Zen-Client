@@ -27,7 +27,7 @@ import GuiData;
 
 namespace BigRatGlue
 {
-    static constexpr bool BR_DISABLE_CLIP = true;
+    static constexpr bool BR_DISABLE_CLIP = false;
     inline ScreenContext* GetScreenContext(MinecraftUIRenderContext* rc)
     {
         return rc->getScreenContext();
@@ -299,7 +299,7 @@ export namespace ImGui_ImplBigRat
         //
 
         ImGui::GetStyle().AntiAliasedLines = false;
-        ImGui::GetStyle().AntiAliasedFill = true;
+        ImGui::GetStyle().AntiAliasedFill = false;
 
         if (io.Fonts->Fonts.Size == 0)
         {
@@ -467,7 +467,7 @@ export namespace ImGui_ImplBigRat
                 }
 
                 // ImGui indices are 16-bit absolute; pass 0 for maxVertices
-                tess->begin(mce::PrimitiveMode::TriangleList, 0, true);
+                tess->begin(mce::PrimitiveMode::TriangleList, 0, false);
                 tess->resetTransform(false);
                 for (unsigned int idx = 0; idx < pcmd->ElemCount; idx += 3)
                 {
