@@ -5,6 +5,7 @@ module;
 #include <iostream>
 #include <iomanip>
 #include <chrono>
+#include <filesystem>
 
 export module Zen;
 
@@ -12,6 +13,8 @@ import HookManager;
 import SigManager;
 import SetupAndRender;
 import Module;
+import SoundPlayer;
+import Utils;
 
 namespace Zen::Detail
 {
@@ -63,6 +66,27 @@ export namespace Zen
         auto tAfterHooks = std::chrono::high_resolution_clock::now();
         auto& hm = GetHookManager();
         hm.enableAll();
+        GetSoundPlayer().initialize();
+        {
+            std::string base = Utils::GetRoamingPath();
+            if (!base.empty())
+            {
+                std::filesystem::path wav = std::filesystem::path(base) / "sound.wav";
+                if (GetSoundPlayer().loadWavFile("roam", wav.wstring()))
+                {
+                    GetSoundPlayer().play("roam", 0.9f, false);
+                }
+                else
+                {
+                    std::cout << "[Sound] Failed to load: " << wav.string() << ", using beep" << std::endl;
+                    GetSoundPlayer().playOneShotSine(880.0f, 0.12f, 0.35f);
+                }
+            }
+            else
+            {
+                GetSoundPlayer().playOneShotSine(880.0f, 0.12f, 0.35f);
+            }
+        }
         if (auto* clickGui = Modules::Find("ClickGui")) clickGui->setEnabled(true);
         auto tAfterEnable = std::chrono::high_resolution_clock::now();
 
