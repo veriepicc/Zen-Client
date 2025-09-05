@@ -112,7 +112,7 @@ namespace Hooks::Render::SetupAndRender
 
         if (!State::imageInitialized)
         {
-            std::string base = GetRoamingPath();
+            std::string base = Utils::GetRoamingPath();
             if (!base.empty())
             {
                 for (char& ch : base) if (ch == '\\') ch = '/';

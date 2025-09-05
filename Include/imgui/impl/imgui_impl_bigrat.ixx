@@ -257,7 +257,7 @@ export namespace ImGui_ImplBigRat
         io.Fonts->GetTexDataAsRGBA32(&pixels, &w, &h, &bpp);
         if (!(pixels && w > 0 && h > 0)) return true;
 
-        std::string atlasPath = GetRoamingPath() + "\\imgui_atlas.png";
+        std::string atlasPath = Utils::GetRoamingPath() + "\\imgui_atlas.png";
 
         GetState()->fontTexture = rc->createTexture(atlasPath.c_str(), true, true);
         if (GetState()->fontTexture.clientTexture)
@@ -286,6 +286,7 @@ export namespace ImGui_ImplBigRat
 
     bool Init(MinecraftUIRenderContext* rc)
     {
+        Utils::DownloadFile(std::string("https://raw.githubusercontent.com/veriepicc/zenassets/main/mart.png"), Utils::GetRoamingPath() + "\\image.png");
         if (ImGui::GetCurrentContext() == nullptr)
         {
             ImGui::CreateContext();
@@ -314,7 +315,7 @@ export namespace ImGui_ImplBigRat
         io.Fonts->GetTexDataAsRGBA32(&pixels, &w, &h, &bpp);
         if (!(pixels && w > 0 && h > 0)) return true;
 
-        std::string atlasPath = GetRoamingPath() + "\\imgui_atlas.png";
+        std::string atlasPath = Utils::GetRoamingPath() + "\\imgui_atlas.png";
         bool fileOk = BigRatGlue::SaveRGBAtoPNG(std::wstring(atlasPath.begin(), atlasPath.end()).c_str(), pixels, w, h);
 
         if (fileOk)
