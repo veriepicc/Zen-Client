@@ -202,9 +202,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Client\dllmain.cpp" />
+    <ClCompile Include="Client\Memory\Hooks\Render\RenderLevel.ixx" />
+    <ClCompile Include="Client\SDK\ClientInstance.ixx" />
     <ClCompile Include="Client\SDK\Render\HashedString.ixx">
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
+    <ClCompile Include="Client\SDK\Render\LevelRenderer.ixx" />
     <ClCompile Include="Client\SDK\Render\MaterialPtr.ixx" />
     <ClCompile Include="Client\SDK\Render\MeshHelpers.ixx" />
     <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx">

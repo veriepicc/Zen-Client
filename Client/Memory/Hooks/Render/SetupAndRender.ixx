@@ -150,6 +150,8 @@ namespace Hooks::Render::SetupAndRender
 
         // ImGui rendering is executed in DrawImageDetour on first image draw each frame
 
+        //std::cout << "Level renderer from ci: " << std::hex << renderContext->getClientInstance()->getLevelRenderer() << std::endl;
+
         if (State::originalFunction)
             State::originalFunction(screenView, renderContext);
     }

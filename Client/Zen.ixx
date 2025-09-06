@@ -11,7 +11,6 @@ export module Zen;
 
 import HookManager;
 import SigManager;
-import SetupAndRender;
 import Module;
 import SoundPlayer;
 import Utils;
@@ -79,12 +78,12 @@ export namespace Zen
                 else
                 {
                     std::cout << "[Sound] Failed to load: " << wav.string() << ", using beep" << std::endl;
-                    GetSoundPlayer().playOneShotSine(880.0f, 0.12f, 0.35f);
+                    //GetSoundPlayer().playOneShotSine(880.0f, 0.12f, 0.35f);
                 }
             }
             else
             {
-                GetSoundPlayer().playOneShotSine(880.0f, 0.12f, 0.35f);
+                //GetSoundPlayer().playOneShotSine(880.0f, 0.12f, 0.35f);
             }
         }
         if (auto* clickGui = Modules::Find("ClickGui")) clickGui->setEnabled(true);

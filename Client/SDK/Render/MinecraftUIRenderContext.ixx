@@ -4,6 +4,8 @@ module;
 #include <string>
 export module MinecraftUIRenderContext;
 
+import ClientInstance;
+
 import Memory;
 import OffsetManager;
 import SDK;
@@ -18,12 +20,13 @@ import HashedString;
 import Math;
 import RectangleArea;
 
+
 export class MinecraftUIRenderContext
 {
 public:
-    void* getClientInstance()
+    ClientInstance* getClientInstance()
     {
-        return Memory::MemberAt<void*>(this, Offsets::MinecraftUIRenderContext_clientInstance);
+        return Memory::MemberAt<ClientInstance*>(this, Offsets::MinecraftUIRenderContext_clientInstance);
     }
 
     ScreenContext* getScreenContext()
