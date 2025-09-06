@@ -8,6 +8,6 @@ import LevelRenderer;
 export class ClientInstance {
 public:
 	LevelRenderer* getLevelRenderer() {
-		return Memory::MemberAt<LevelRenderer*>(this, 0xE8);
+		return Memory::CallVFunc<LevelRenderer*>(Offsets::ClientInstance_getLevelRenderer_idx, this);
 	}
 };

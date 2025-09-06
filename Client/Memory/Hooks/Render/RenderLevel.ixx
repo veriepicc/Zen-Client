@@ -1,5 +1,6 @@
 module;
 #include <iostream>
+#include <format>
 
 export module RenderLevel;
 
@@ -14,7 +15,10 @@ using RenderLevelFunction = void(*)(LevelRenderer*, ScreenContext*, void*);
 RenderLevelFunction originalFunction = nullptr;
 
 void LevelRenderer_renderLevel(LevelRenderer* a1, ScreenContext* screenContext, void* a3) {
-    //std::cout << "level renderer from hook: " << std::hex << a1 << std::endl;
+    auto camPos = a1->getLevelRendererPlayer()->getCameraPos();
+
+    //std::cout << std::format("camPos: {} {} {}", camPos.x, camPos.y, camPos.z) << "\r";
+
     originalFunction(a1, screenContext, a3);
 }
 
