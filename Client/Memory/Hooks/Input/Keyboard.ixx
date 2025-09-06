@@ -5,6 +5,7 @@ export module KeyboardHook;
 import HookManager;
 import SigManager;
 import imgui_impl_bigrat;
+import Module;
 
 namespace Hooks::Input::Keyboard
 {
@@ -20,6 +21,7 @@ namespace Hooks::Input::Keyboard
         // Feed to ImGui: assume key codes map 1:1 for A-Z and digits; user can refine later
         if (key >= 0 && key <= 512)
             ImGui_ImplBigRat::AddKeyEvent(key, state);
+        Modules::HandleKeyEvent(key, state);
         if (State::original) State::original(key, state);
     }
 }

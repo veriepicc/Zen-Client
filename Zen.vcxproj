@@ -282,6 +282,10 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
+    <ClCompile Include="Client\Utils\Keys.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
     <ClCompile Include="Client\Memory\SigManager.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>

@@ -59,7 +59,7 @@ namespace Hooks::Render::SetupAndRender
         {
             ImGui_ImplBigRat::NewFrame(1.0f / 60.0f, 0.0f, 0.0f, 1.0f, 1.0f);
             ImGui::NewFrame();
-            ImGui::ShowDemoWindow();
+            // Try to fetch texture handle if we have a resource location
             if (!State::imageTexture.clientTexture && State::imageTexture.resourceLocation)
             {
                 TexturePtr fetched;
@@ -69,6 +69,8 @@ namespace Hooks::Render::SetupAndRender
                     State::imageTexture = fetched;
                 }
             }
+
+            // MART window
             ImGui::SetNextWindowPos(ImVec2(420, 120), ImGuiCond_FirstUseEver);
             ImGui::Begin("Mart", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
             if (State::imageTexture.clientTexture)
@@ -80,7 +82,8 @@ namespace Hooks::Render::SetupAndRender
                 ImGui::TextUnformatted("Loading dog texture...");
             }
             ImGui::End();
-            
+
+            // Render module UIs (e.g., ClickGui)
             Modules::RenderTick(ctx);
             ImGui::Render();
             ImGui_ImplBigRat::RenderDrawData(ImGui::GetDrawData(), ctx);
@@ -110,6 +113,7 @@ namespace Hooks::Render::SetupAndRender
 
         State::drewOnceThisFrame = false;
 
+        // Texture bootstrap for Mart image once
         if (!State::imageInitialized)
         {
             std::string base = Utils::GetRoamingPath();
