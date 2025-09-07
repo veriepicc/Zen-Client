@@ -34,6 +34,7 @@ std::unique_ptr<BaseLightData>* BaseLightTextureImageBuilder_createBaseLightText
     ret->get()->mDarkenWorldAmount = 0.f;
     ret->get()->mSkyDarken = 0.f;
     ret->get()->mSkyFlashTime = 0.f;
+    ret->get()->mDimensionType = 0;
 
     ret->get()->mNightvisionActive = true;
     ret->get()->mNightvisionScale = 1.f;
