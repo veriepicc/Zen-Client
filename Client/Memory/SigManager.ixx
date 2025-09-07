@@ -73,6 +73,10 @@ public:
                  "48 8B ? 48 89 ? ? 55 56 57 41 ? 41 ? 41 ? 41 ? 48 8D ? ? ? ? ? 48 81 EC ? ? ? ? 0F 29 ? ? 0F 29 ? ? 44 0F ? ? ? 44 0F ? ? ? 48 8B ? ? ? ? ? 48 33 ? 48 89 ? ? ? ? ? 4D 8B ? 4C 8B ? 4C 8B ? 33 D2",
                  SigType::Sig,
                  0)
+    REGISTER_SIG(BaseLightTextureImageBuilder_createBaseLightTextureData,
+                 "48 89 5C 24 ? 48 89 54 24 ? 55 56 57 41 56 41 57 48 83 EC ? 4D 8B F1 49 8B F8",
+                 SigType::Sig,
+                 0)
     REGISTER_SIG(Gamemode,
                  "48 8B 89 ? ? ? ? 48 8B 01 48 8B 40 18 FF 15 ? ? ? ? 8B 43 24 89 43 20 48 83 C4 20 5B",
                  SigType::Sig,
