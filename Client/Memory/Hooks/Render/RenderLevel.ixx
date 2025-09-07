@@ -17,7 +17,7 @@ RenderLevelFunction originalFunction = nullptr;
 void LevelRenderer_renderLevel(LevelRenderer* a1, ScreenContext* screenContext, void* a3) {
     auto camPos = a1->getLevelRendererPlayer()->getCameraPos();
 
-    //std::cout << std::format("camPos: {} {} {}", camPos.x, camPos.y, camPos.z) << "\r";
+    std::cout << a1->getLevelRendererPlayer() << "\r";
 
     originalFunction(a1, screenContext, a3);
 }

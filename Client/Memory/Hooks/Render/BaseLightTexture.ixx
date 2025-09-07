@@ -31,16 +31,8 @@ CreateBaseLightFunction originalFunction = nullptr;
 
 std::unique_ptr<BaseLightData>* BaseLightTextureImageBuilder_createBaseLightTextureData(__int64 _this, __int64* result, __int64 client, __int64 currentData) {
     auto ret = originalFunction(_this, result, client, currentData);
-    ret->get()->mDarkenWorldAmount = 0.f;
-    ret->get()->mSkyDarken = 0.f;
-    ret->get()->mSkyFlashTime = 0.f;
-    ret->get()->mDimensionType = 0;
-
     ret->get()->mNightvisionActive = true;
     ret->get()->mNightvisionScale = 1.f;
-
-    ret->get()->mUnderwaterVision = true;
-    ret->get()->mUnderwaterScale = 0.f;
 
     result = (__int64*)(ret);
     return ret;
