@@ -42,8 +42,6 @@ std::unique_ptr<BaseLightData>* BaseLightTextureImageBuilder_createBaseLightText
     ret->get()->mUnderwaterVision = true;
     ret->get()->mUnderwaterScale = 0.f;
 
-    std::cout << "running" << std::endl;
-
     result = (__int64*)(ret);
     return ret;
 }
