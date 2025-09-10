@@ -1,7 +1,7 @@
 module;
 #include <windows.h>
 
-#include <minhook/MinHook.h>
+#include <Jonathan.hpp>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -44,7 +44,7 @@ export namespace Memory
         bool initialize()
         {
             if (initialized) return true;
-            initialized = (MH_Initialize() == MH_OK);
+            initialized = (Jonathan::init() == Jonathan::status::ok);
             return initialized;
         }
 
@@ -59,12 +59,12 @@ export namespace Memory
             if (!initialize()) return false;
             for (const auto& h : hooks)
             {
-                if (MH_CreateHook(h.target, h.detour, h.original) != MH_OK)
+                if (Jonathan::create_hook(h.target, h.detour, h.original) != Jonathan::status::ok)
                 {
                     std::cout << "[Memory] CreateHook failed target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(h.target) << std::dec << std::endl;
                     return false;
                 }
-                if (MH_EnableHook(h.target) != MH_OK)
+                if (Jonathan::enable_hook(h.target) != Jonathan::status::ok)
                 {
                     std::cout << "[Memory] EnableHook failed target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(h.target) << std::dec << std::endl;
                     return false;
@@ -77,11 +77,11 @@ export namespace Memory
         {
             for (const auto& h : hooks)
             {
-                MH_DisableHook(h.target);
-                MH_RemoveHook(h.target);
+                Jonathan::disable_hook(h.target);
+                Jonathan::remove_hook(h.target);
             }
             hooks.clear();
-            if (initialized) MH_Uninitialize();
+            if (initialized) Jonathan::shutdown();
             initialized = false;
         }
 

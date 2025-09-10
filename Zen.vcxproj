@@ -375,21 +375,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
-    <ClCompile Include="Include\minhook\buffer.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Include\minhook\hook.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Include\minhook\trampoline.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Include\minhook\hde\hde32.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Include\minhook\hde\hde64.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
+    
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

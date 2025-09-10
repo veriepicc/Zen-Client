@@ -12,7 +12,8 @@ module;
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#include <minhook/MinHook.h>
+#define JONATHAN_CFG_FREEZE_THREADS 0
+#include <Jonathan.hpp>
 
 export module HookManager;
 import SigManager;
@@ -35,7 +36,7 @@ public:
         if (!initialized) return;
         disableAll();
         removeAll();
-        MH_Uninitialize();
+        Jonathan::shutdown();
         initialized = false;
     }
 
@@ -52,10 +53,11 @@ public:
             return true;
         }
 
-        const auto status = MH_CreateHook(target, reinterpret_cast<LPVOID>(detour), reinterpret_cast<LPVOID*>(original));
-        if (status != MH_OK)
+        const auto st_create = Jonathan::create_hook(target, reinterpret_cast<void*>(detour), reinterpret_cast<void**>(original));
+        if (st_create != Jonathan::status::ok)
         {
-            std::cout << "[Hook] CreateHook failed target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << std::endl;
+            std::cout << "[Hook] CreateHook failed target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec
+                      << " reason=" << Jonathan::status_to_string(st_create) << std::endl;
             return false;
         }
         targets.insert(target);
@@ -73,10 +75,11 @@ public:
             std::cout << "[Hook] Create skipped (already created) target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << std::endl;
             return true;
         }
-        const auto status = MH_CreateHook(target, detour, original);
-        if (status != MH_OK)
+        const auto st_create = Jonathan::create_hook(target, detour, original);
+        if (st_create != Jonathan::status::ok)
         {
-            std::cout << "[Hook] CreateHook failed target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << std::endl;
+            std::cout << "[Hook] CreateHook failed target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec
+                      << " reason=" << Jonathan::status_to_string(st_create) << std::endl;
             return false;
         }
         targets.insert(target);
@@ -88,8 +91,10 @@ public:
     {
         std::scoped_lock lock(mutex);
         if (!ensureInitialized()) return false;
-        const bool ok = (MH_EnableHook(MH_ALL_HOOKS) == MH_OK);
-        std::cout << "[Hook] EnableAll " << (ok ? "ok" : "failed") << std::endl;
+        const auto st = Jonathan::enable_hook(nullptr);
+        const bool ok = (st == Jonathan::status::ok);
+        std::cout << "[Hook] EnableAll " << (ok ? "ok" : "failed")
+                  << (ok ? "" : std::string(" reason=") + Jonathan::status_to_string(st)) << std::endl;
         return ok;
     }
 
@@ -97,7 +102,7 @@ public:
     {
         std::scoped_lock lock(mutex);
         if (!initialized) return true;
-        const bool ok = (MH_DisableHook(MH_ALL_HOOKS) == MH_OK);
+        const bool ok = (Jonathan::disable_hook(nullptr) == Jonathan::status::ok);
         std::cout << "[Hook] DisableAll " << (ok ? "ok" : "failed") << std::endl;
         return ok;
     }
@@ -106,8 +111,10 @@ public:
     {
         std::scoped_lock lock(mutex);
         if (!ensureInitialized()) return false;
-        const bool ok = (MH_EnableHook(target) == MH_OK);
-        std::cout << "[Hook] Enable target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << (ok ? " ok" : " failed") << std::endl;
+        const auto st = Jonathan::enable_hook(target);
+        const bool ok = (st == Jonathan::status::ok);
+        std::cout << "[Hook] Enable target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec
+                  << (ok ? " ok" : std::string(" failed reason=") + Jonathan::status_to_string(st)) << std::endl;
         return ok;
     }
 
@@ -115,7 +122,7 @@ public:
     {
         std::scoped_lock lock(mutex);
         if (!initialized) return true;
-        const bool ok = (MH_DisableHook(target) == MH_OK);
+        const bool ok = (Jonathan::disable_hook(target) == Jonathan::status::ok);
         std::cout << "[Hook] Disable target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << (ok ? " ok" : " failed") << std::endl;
         return ok;
     }
@@ -124,7 +131,7 @@ public:
     {
         std::scoped_lock lock(mutex);
         if (!initialized) return true;
-        const bool ok = (MH_RemoveHook(target) == MH_OK);
+        const bool ok = (Jonathan::remove_hook(target) == Jonathan::status::ok);
         if (ok) targets.erase(target);
         std::cout << "[Hook] Remove target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << (ok ? " ok" : " failed") << std::endl;
         return ok;
@@ -136,7 +143,7 @@ public:
         if (!initialized) return true;
         bool ok = true;
         for (auto* h : targets)
-            ok = ok && (MH_RemoveHook(h) == MH_OK);
+            ok = ok && (Jonathan::remove_hook(h) == Jonathan::status::ok);
         targets.clear();
         std::cout << "[Hook] RemoveAll " << (ok ? "ok" : "failed") << std::endl;
         return ok;
@@ -182,14 +189,14 @@ private:
     bool ensureInitialized()
     {
         if (initialized) return true;
-        if (MH_Initialize() == MH_OK)
+        if (Jonathan::init() == Jonathan::status::ok)
         {
             initialized = true;
-            std::cout << "[Hook] MinHook initialized" << std::endl;
+            std::cout << "[Hook] Jonathan initialized" << std::endl;
         }
         else
         {
-            std::cout << "[Hook] MinHook initialization failed" << std::endl;
+            std::cout << "[Hook] Jonathan initialization failed" << std::endl;
         }
         return initialized;
     }
