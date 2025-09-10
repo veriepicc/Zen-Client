@@ -171,6 +171,9 @@
     <ClCompile Include="Client\Memory\Hooks\Render\BaseLightTexture.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Client\Utils\Keys.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\imgui\impl\imgui_impl_bigrat.h">
@@ -179,5 +182,8 @@
     <ClInclude Include="Include\imgui\imgui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

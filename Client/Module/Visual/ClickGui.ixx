@@ -1,4 +1,6 @@
 module;
+#include <glm/glm.hpp>
+#include <glm/ext/matrix_transform.hpp>
 #include <string>
 #include <iostream>
 #include <cstring>
@@ -62,7 +64,7 @@ public:
         static MaterialPtr* mat = nullptr;
         if (!mat)
         {
-            HashedString name("ui_fill_color");
+            HashedString name("name_tag_depth_tested");
             mat = MaterialPtr::createUIMaterial(name);
             if (!mat) mat = MaterialPtr::createMaterial(name);
         }
@@ -70,73 +72,63 @@ public:
 
         const auto cam = lr->getLevelRendererPlayer()->getCameraPos();
         static int logEvery = 0;
+		bool outline = true;
 
-        const float panelWidth = 100.4f;
-        const float panelHeight = 100.4f;
-        const float sideOffset = 10.3f;     // how far to the right of the camera
-        const float forwardOffset = 1.25f; // small nudge in front so not inside camera
+		auto pos = Math::Vec3<float>(295.f, -59.f, 93.f);
+		auto upper = Math::Vec3<float>(pos.x + 1.f, pos.y + 1.f, pos.z + 1.f);
+		auto lower = Math::Vec3<float>(pos.x - 1.f, pos.y - 1.f, pos.z - 1.f);
 
-        const float cx = cam.x + sideOffset;
-        const float cy = cam.y + 1.5f;
-        const float cz = cam.z - forwardOffset; // nudge in front, anchored next to camera
-        if ((++logEvery % 120) == 1)
-        {
-            std::cout << "[ClickGui3D] cam=(" << cam.x << ", " << cam.y << ", " << cam.z << ")";
-            std::cout << " panel center=(" << cx << ", " << cy << ", " << cz << ")" << std::endl;
-        }
+		Math::Vec3<float> diff = Math::Vec3<float>(upper.x - lower.x, upper.y - lower.y, upper.z - lower.z); //upper.sub(lower);
+		Math::Vec3<float> newLower = Math::Vec3<float>(lower.x - cam.x, lower.y - cam.y, lower.z - cam.z);
+		Math::Vec3<float> vertices[8] = {
+			{newLower.x, newLower.y, newLower.z},
+			{newLower.x + diff.x, newLower.y, newLower.z},
+			{newLower.x, newLower.y, newLower.z + diff.z},
+			{newLower.x + diff.x, newLower.y, newLower.z + diff.z},
 
-        const float x0 = cx - panelWidth * 0.5f;
-        const float y0 = cy - panelHeight * 0.5f;
-        const float x1 = cx + panelWidth * 0.5f;
-        const float y1 = cy + panelHeight * 0.5f;
-        const float z = cz;
+			{newLower.x, newLower.y + diff.y, newLower.z},
+			{newLower.x + diff.x, newLower.y + diff.y, newLower.z},
+			{newLower.x, newLower.y + diff.y, newLower.z + diff.z},
+			{newLower.x + diff.x, newLower.y + diff.y, newLower.z + diff.z} };
+		// Scale vertices using glm
+		glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.f), 0.f, glm::vec3(1.0f, 1.0f, 1.0f));
+		Math::Vec3<float> newLowerReal = Math::Vec3<float>(newLower.x + 0.5f, newLower.y + 0.5f, newLower.z + 0.5f);//newLower.add(0.5f, 0.5f, 0.5f);  // .add(0.4375f, 0.4375f, 0.4375f) is chest
+		for (int i = 0; i < 8; i++) {
+			glm::vec4 rotatedVertex = rotationMatrix * glm::vec4(vertices[i].x - newLowerReal.x, vertices[i].y - newLowerReal.y, vertices[i].z - newLowerReal.z, 0.0f);
+			vertices[i] = Math::Vec3{ rotatedVertex.x + newLowerReal.x, rotatedVertex.y + newLowerReal.y, rotatedVertex.z + newLowerReal.z };
+		}
 
-        // Quad 1: plane perpendicular to Z axis (vertical panel)
-        tess->begin(mce::PrimitiveMode::TriangleList, 6, false);
-        tess->color(0.95f, 0.10f, 0.20f, 0.85f);
-        // front face
-        tess->vertex(x0, y0, z);
-        tess->vertex(x1, y0, z);
-        tess->vertex(x1, y1, z);
-        tess->vertex(x0, y0, z);
-        tess->vertex(x1, y1, z);
-        tess->vertex(x0, y1, z);
-        // back face (double-sided)
-        tess->vertex(x1, y1, z);
-        tess->vertex(x1, y0, z);
-        tess->vertex(x0, y0, z);
-        tess->vertex(x0, y1, z);
-        tess->vertex(x1, y1, z);
-        tess->vertex(x0, y0, z);
-        MeshHelpers::renderMeshImmediately(sc, tess, mat);
+		tess->begin(mce::PrimitiveMode::QuadList);
+		static int v[48] = { 5, 7, 6, 4, 4, 6, 7, 5, 1, 3, 2, 0, 0, 2, 3, 1, 4, 5, 1, 0, 0, 1, 5, 4, 6, 7, 3, 2, 2, 3, 7, 6, 4, 6, 2, 0, 0, 2, 6, 4, 5, 7, 3, 1, 1, 3, 7, 5 };
+		for (int i = 0; i < 48; i++) tess->vertex(vertices[v[i]].x, vertices[v[i]].y, vertices[v[i]].z);
+		MeshHelpers::renderMeshImmediately(sc, tess, mat);
 
-        // Quad 2: plane perpendicular to X axis (vertical panel), same center
-        const float zx0 = cz - panelWidth * 0.5f;
-        const float zx1 = cz + panelWidth * 0.5f;
-        const float xx = cx;
-        tess->begin(mce::PrimitiveMode::TriangleList, 6, false);
-        tess->color(0.10f, 0.70f, 0.30f, 0.85f);
-        // front face
-        tess->vertex(xx, y0, zx0);
-        tess->vertex(xx, y0, zx1);
-        tess->vertex(xx, y1, zx1);
-        tess->vertex(xx, y0, zx0);
-        tess->vertex(xx, y1, zx1);
-        tess->vertex(xx, y1, zx0);
-        // back face (double-sided)
-        tess->vertex(xx, y1, zx1);
-        tess->vertex(xx, y0, zx1);
-        tess->vertex(xx, y0, zx0);
-        tess->vertex(xx, y1, zx0);
-        tess->vertex(xx, y1, zx1);
-        tess->vertex(xx, y0, zx0);
-        MeshHelpers::renderMeshImmediately(sc, tess, mat);
+		if (!outline) return;
+		tess->begin(mce::PrimitiveMode::LineList, 12);
+#define line(m, n)                      \
+	tess->vertex(m.x, m.y, m.z); \
+	tess->vertex(n.x, n.y, n.z);
 
-        static int drawLog = 0;
-        if ((++drawLog % 180) == 2)
-        {
-            std::cout << "[ClickGui3D] submitted 2 quads at center z=" << z << " and center x=" << xx << std::endl;
-        }
+		// Top square
+		line(vertices[4], vertices[5]);
+		line(vertices[5], vertices[7]);
+		line(vertices[7], vertices[6]);
+		line(vertices[6], vertices[4]);
+
+		// Bottom Square
+		line(vertices[0], vertices[1]);
+		line(vertices[1], vertices[3]);
+		line(vertices[3], vertices[2]);
+		line(vertices[2], vertices[0]);
+
+		// Sides
+		line(vertices[0], vertices[4]);
+		line(vertices[1], vertices[5]);
+		line(vertices[2], vertices[6]);
+		line(vertices[3], vertices[7]);
+
+#undef line
+		MeshHelpers::renderMeshImmediately(sc, tess, mat);
     }
 };
 
