@@ -141,23 +141,7 @@ namespace mem {
         return mi.State == MEM_COMMIT && (mi.Protect & page_exec_flags);
     }
 
-    struct block {
-        block* next;
-        uint8_t* free_head;
-        uint32_t used;
-    };
-
-    inline block* g_blocks = nullptr;
-
-    JN_FORCEINLINE void uninitialize() noexcept {
-        block* b = g_blocks;
-        g_blocks = nullptr;
-        while (b) {
-            block* n = b->next;
-            VirtualFree(b, 0, MEM_RELEASE);
-            b = n;
-        }
-    }
+    JN_FORCEINLINE void uninitialize() noexcept {}
 
     [[nodiscard]] JN_FORCEINLINE uint8_t* try_alloc_page(void* where) noexcept {
         SYSTEM_INFO si{}; GetSystemInfo(&si);
@@ -208,72 +192,22 @@ namespace mem {
     }
 
     [[nodiscard]] JN_FORCEINLINE uint8_t* alloc_slot(void* origin) noexcept {
-        // Find block within range that has free slot
-        for (block* b = g_blocks; b; b = b->next) {
-#if defined(_M_X64) || defined(__x86_64__)
-            uintptr_t o = (uintptr_t)origin;
-            uintptr_t a = (uintptr_t)b;
-            if (a + 0x1000 < o - 0x80000000ull || a > o + 0x80000000ull) continue;
-#endif
-            if (b->free_head) {
-                uint8_t* p = b->free_head;
-                b->free_head = *(uint8_t**)p;
-                b->used++;
-#if defined(_DEBUG)
-                std::memset(p, 0xCC, JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE);
-#endif
-                return p;
-            }
-        }
-
         uint8_t* page = try_alloc_page(origin);
-        if (!page) return nullptr; // well, shit
-
-        block* b = (block*)page;
-        b->next = g_blocks;
-        b->used = 0;
-        b->free_head = nullptr;
-
-        uint8_t* cursor = page + sizeof(block);
-        const uint8_t* end = page + 0x1000;
-        while ((size_t)(end - cursor) >= JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE) {
-            *(uint8_t**)cursor = b->free_head;
-            b->free_head = cursor;
-            cursor += JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE;
-        }
-        g_blocks = b;
-
-        uint8_t* p = b->free_head;
-        if (!p) return nullptr; // shouldn't happen if slots_free > 0, but safety first
-        b->free_head = *(uint8_t**)p;
-        b->used++;
+        if (!page) return nullptr;
+        const size_t align = 32;
+        const size_t max_off = (0x1000 - JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE);
+        uint64_t r = __rdtsc();
+        size_t off = (size_t)((r >> 4) % ((max_off / align) + 1)) * align;
 #if defined(_DEBUG)
-        std::memset(p, 0xCC, JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE);
+        std::memset(page + off, 0xCC, JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE);
 #endif
-        return p;
+        return page + off;
     }
 
     JN_FORCEINLINE void free_slot(void* ptr) noexcept {
         if (!ptr) return;
-        block* b = g_blocks; block* prev = nullptr;
-        uintptr_t page = (uintptr_t)ptr & ~(uintptr_t)0xFFF;
-        while (b) {
-            if ((uintptr_t)b == page) {
-                uint8_t* p = (uint8_t*)ptr;
-#if defined(_DEBUG)
-                std::memset(p, 0x00, JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE);
-#endif
-                *(uint8_t**)p = b->free_head;
-                b->free_head = p;
-                if (b->used) b->used--;
-                if (b->used == 0) {
-                    if (prev) prev->next = b->next; else g_blocks = b->next;
-                    VirtualFree(b, 0, MEM_RELEASE);
-                }
-                return;
-            }
-            prev = b; b = b->next;
-        }
+        uintptr_t base = (uintptr_t)ptr & ~(uintptr_t)0xFFF;
+        VirtualFree((void*)base, 0, MEM_RELEASE);
     }
 }
 
@@ -451,9 +385,9 @@ struct insn_info {
     return len;
 }
 
-// Trampoline
+// Jump pad planning
 
-struct trampoline_desc {
+struct redirect_plan {
     void* target;
     void* detour;
     void* tramp;
@@ -463,7 +397,7 @@ struct trampoline_desc {
     uint8_t new_ip[8];
 };
 
-[[nodiscard]] inline JN_FORCEINLINE bool build_trampoline(trampoline_desc* td) noexcept {
+[[nodiscard]] inline JN_FORCEINLINE bool make_jump_pad(redirect_plan* td) noexcept {
     uint8_t* t = (uint8_t*)td->target;
     uint8_t* u = (uint8_t*)td->tramp;
     size_t copied = 0;
@@ -522,12 +456,16 @@ struct trampoline_desc {
                 if (rel32 >= INT32_MIN && rel32 <= INT32_MAX) { emit::jmp_rel32(u + u_pos, rel32); u_pos += 5; }
                 else { emit::jmp_abs64(u + u_pos, (void*)dst); u_pos += 14; }
             } else if ((op & 0xF0) == 0x70) {
-                intptr_t rel32 = (intptr_t)dst - (intptr_t)((uint8_t*)u + u_pos + 6);
+                // invert condition and fall through a short jump, then rel32 to target
+                uint8_t cc = (uint8_t)(op - 0x70);
+                uint8_t inverted = (uint8_t)(cc ^ 1);
+                intptr_t rel32 = (intptr_t)dst - (intptr_t)((uint8_t*)u + u_pos + 8);
                 if (rel32 >= INT32_MIN && rel32 <= INT32_MAX) {
-                    uint8_t cc = (uint8_t)(op - 0x70);
-                    uint8_t buf[6]; buf[0] = 0x0F; buf[1] = (uint8_t)(0x80 | cc);
-                    *(int32_t*)(buf + 2) = (int32_t)rel32;
-                    std::memcpy(u + u_pos, buf, 6); u_pos += 6;
+                    uint8_t buf[8];
+                    buf[0] = 0x70 | inverted; buf[1] = 0x05; // jncc +5
+                    buf[2] = 0xE9; *(int32_t*)(buf + 3) = (int32_t)rel32; // jmp rel32
+                    buf[7] = 0x90; // pad
+                    std::memcpy(u + u_pos, buf, 8); u_pos += 8;
                 } else { emit::jmp_abs64(u + u_pos, (void*)dst); u_pos += 14; }
             } else { emit::jmp_abs64(u + u_pos, (void*)dst); u_pos += 14; }
 #else
@@ -558,7 +496,7 @@ struct trampoline_desc {
 
 // Hooks
 
-struct hook_rec {
+struct detour_node {
     void* target;
     void* detour;
     void* relay;
@@ -576,7 +514,7 @@ struct hook_rec {
 
 inline LONG g_lock = 0;
 inline HANDLE g_heap = nullptr;
-inline hook_rec* g_hooks = nullptr;
+inline detour_node* g_hooks = nullptr;
 inline uint32_t g_hooks_size = 0;
 inline uint32_t g_hooks_cap  = 0;
 
@@ -599,14 +537,14 @@ JN_FORCEINLINE void leave_spin() noexcept {
     return UINT32_MAX;
 }
 
-[[nodiscard]] inline JN_FORCEINLINE hook_rec* add_hook() noexcept {
+[[nodiscard]] inline JN_FORCEINLINE detour_node* add_hook() noexcept {
     if (!g_hooks) {
         g_hooks_cap = 32;
-        g_hooks = (hook_rec*)HeapAlloc(g_heap, HEAP_ZERO_MEMORY, g_hooks_cap * sizeof(hook_rec));
+        g_hooks = (detour_node*)HeapAlloc(g_heap, HEAP_ZERO_MEMORY, g_hooks_cap * sizeof(detour_node));
         if (!g_hooks) return nullptr;
     } else if (g_hooks_size >= g_hooks_cap) {
         uint32_t newcap = g_hooks_cap * 2;
-        hook_rec* p = (hook_rec*)HeapReAlloc(g_heap, HEAP_ZERO_MEMORY, g_hooks, newcap * sizeof(hook_rec));
+        detour_node* p = (detour_node*)HeapReAlloc(g_heap, HEAP_ZERO_MEMORY, g_hooks, newcap * sizeof(detour_node));
         if (!p) return nullptr;
         g_hooks = p; g_hooks_cap = newcap;
     }
@@ -640,7 +578,7 @@ struct frozen_threads { DWORD* ids; uint32_t size; uint32_t cap; };
     return true;
 }
 
-[[nodiscard]] inline JN_FORCEINLINE uintptr_t map_old_ip(const hook_rec& h, uintptr_t ip) noexcept {
+[[nodiscard]] inline JN_FORCEINLINE uintptr_t map_old_ip(const detour_node& h, uintptr_t ip) noexcept {
     // TODO: maybe optimize this with a hash table if we get tons of hooks
     for (uint8_t i = 0; i < h.n_ip; ++i) {
         if (ip == (uintptr_t)h.tramp + h.new_ip[i]) return (uintptr_t)h.target + h.old_ip[i];
@@ -648,7 +586,7 @@ struct frozen_threads { DWORD* ids; uint32_t size; uint32_t cap; };
     return 0;
 }
 
-[[nodiscard]] inline JN_FORCEINLINE uintptr_t map_new_ip(const hook_rec& h, uintptr_t ip) noexcept {
+[[nodiscard]] inline JN_FORCEINLINE uintptr_t map_new_ip(const detour_node& h, uintptr_t ip) noexcept {
     for (uint8_t i = 0; i < h.n_ip; ++i) {
         if (ip == (uintptr_t)h.target + h.old_ip[i]) return (uintptr_t)h.tramp + h.new_ip[i];
     }
@@ -716,8 +654,8 @@ inline JN_FORCEINLINE void unfreeze_threads(const frozen_threads* ft) noexcept {
 #endif
 }
 
-inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
-    hook_rec& h = g_hooks[pos];
+inline JN_FORCEINLINE status activate_patch(uint32_t pos, bool enable) noexcept {
+    detour_node& h = g_hooks[pos];
     const size_t hook_sz = h.patch_len;
 
     DWORD old{};
@@ -758,7 +696,7 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
     frozen_threads ft{};
     if (!freeze_threads(UINT32_MAX, false, &ft)) { leave_spin(); return status::memory_alloc; }
     for (uint32_t i = 0; i < g_hooks_size; ++i) {
-        if (g_hooks[i].enabled) enable_ll(i, false);
+        if (g_hooks[i].enabled) activate_patch(i, false);
         mem::free_slot(g_hooks[i].tramp);
     }
     unfreeze_threads(&ft);
@@ -782,12 +720,12 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
     uint8_t* slot = mem::alloc_slot(target);
     if (!slot) { leave_spin(); return status::memory_alloc; }
 
-    trampoline_desc td{}; td.target = target; td.detour = detour; td.tramp = slot; td.patch_above = 0;
-    if (!build_trampoline(&td)) {
+    redirect_plan td{}; td.target = target; td.detour = detour; td.tramp = slot; td.patch_above = 0;
+    if (!make_jump_pad(&td)) {
         mem::free_slot(slot); leave_spin(); return status::unsupported_function;
     }
 
-    hook_rec* h = add_hook();
+    detour_node* h = add_hook();
     if (!h) { mem::free_slot(slot); leave_spin(); return status::memory_alloc; }
 
     h->target = target; h->detour = detour; h->relay = detour; h->tramp = slot; h->enabled = 0; h->queued = 0;
@@ -824,7 +762,7 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
 
     if (g_hooks[idx].enabled) {
         frozen_threads ft{}; if (!freeze_threads(idx, false, &ft)) { leave_spin(); return status::memory_alloc; }
-        enable_ll(idx, false);
+        activate_patch(idx, false);
         unfreeze_threads(&ft);
     }
 
@@ -842,7 +780,7 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
     status st = status::ok;
     if (target == nullptr) {
         frozen_threads ft{}; if (!freeze_threads(UINT32_MAX, true, &ft)) { leave_spin(); return status::memory_alloc; }
-        for (uint32_t i = 0; i < g_hooks_size; ++i) if (!g_hooks[i].enabled) { st = enable_ll(i, true); if (st != status::ok) break; }
+        for (uint32_t i = 0; i < g_hooks_size; ++i) if (!g_hooks[i].enabled) { st = activate_patch(i, true); if (st != status::ok) break; }
         unfreeze_threads(&ft);
     } else {
         uint32_t idx = find_hook(target);
@@ -850,7 +788,7 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
         else if (g_hooks[idx].enabled) st = status::enabled;
         else {
             frozen_threads ft{}; if (!freeze_threads(idx, true, &ft)) { leave_spin(); return status::memory_alloc; }
-            st = enable_ll(idx, true);
+            st = activate_patch(idx, true);
             unfreeze_threads(&ft);
         }
     }
@@ -864,7 +802,7 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
     status st = status::ok;
     if (target == nullptr) {
         frozen_threads ft{}; if (!freeze_threads(UINT32_MAX, false, &ft)) { leave_spin(); return status::memory_alloc; }
-        for (uint32_t i = 0; i < g_hooks_size; ++i) if (g_hooks[i].enabled) { st = enable_ll(i, false); if (st != status::ok) break; }
+        for (uint32_t i = 0; i < g_hooks_size; ++i) if (g_hooks[i].enabled) { st = activate_patch(i, false); if (st != status::ok) break; }
         unfreeze_threads(&ft);
     } else {
         uint32_t idx = find_hook(target);
@@ -872,7 +810,7 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
         else if (!g_hooks[idx].enabled) st = status::disabled;
         else {
             frozen_threads ft{}; if (!freeze_threads(idx, false, &ft)) { leave_spin(); return status::memory_alloc; }
-            st = enable_ll(idx, false);
+            st = activate_patch(idx, false);
             unfreeze_threads(&ft);
         }
     }
@@ -918,7 +856,7 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
     // Batch protect per target to reduce kernel transitions
     for (uint32_t i = first; i < g_hooks_size; ++i) {
         if (g_hooks[i].enabled == g_hooks[i].queued) continue;
-        hook_rec& h = g_hooks[i];
+        detour_node& h = g_hooks[i];
         const size_t hook_sz = h.patch_len;
         DWORD old{};
         if (!VirtualProtect(h.target, hook_sz, PAGE_EXECUTE_READWRITE, &old)) { st = status::memory_protect; break; }
