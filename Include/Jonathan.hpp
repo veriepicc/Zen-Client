@@ -244,6 +244,7 @@ namespace mem {
         g_blocks = b;
 
         uint8_t* p = b->free_head;
+        if (!p) return nullptr; // shouldn't happen if slots_free > 0, but safety first
         b->free_head = *(uint8_t**)p;
         b->used++;
 #if defined(_DEBUG)
@@ -563,7 +564,9 @@ struct hook_rec {
     void* relay;
     void* tramp;
     uint8_t backup[16];
+    uint8_t patch[16];
     uint8_t backed_len;
+    uint8_t patch_len;
     uint8_t enabled;
     uint8_t queued;
     uint8_t n_ip;
@@ -715,20 +718,17 @@ inline JN_FORCEINLINE void unfreeze_threads(const frozen_threads* ft) noexcept {
 
 inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
     hook_rec& h = g_hooks[pos];
-    size_t hook_sz = 0;
-#if defined(_M_X64) || defined(__x86_64__)
-    uint8_t patch[16];
-    if (emit::jmp_auto(patch, (uint8_t*)h.target + 5, h.relay)) hook_sz = 5; else hook_sz = 14;
-#else
-    uint8_t patch[8];
-    emit::jmp_rel32(patch, (intptr_t)h.relay - ((intptr_t)h.target + 5));
-    hook_sz = 5;
-#endif
+    const size_t hook_sz = h.patch_len;
 
     DWORD old{};
     if (!VirtualProtect(h.target, hook_sz, PAGE_EXECUTE_READWRITE, &old)) return status::memory_protect;
     if (enable) {
-        std::memcpy(h.target, patch, hook_sz);
+        if (hook_sz == 5) {
+            *(int32_t*)((uint8_t*)h.target + 1) = *(const int32_t*)(h.patch + 1);
+            *(uint8_t*)h.target = *h.patch;
+        } else {
+            std::memcpy(h.target, h.patch, hook_sz);
+        }
     } else {
         std::memcpy(h.target, h.backup, h.backed_len);
         if (h.backed_len < hook_sz) std::memset((uint8_t*)h.target + h.backed_len, 0x90, hook_sz - h.backed_len);
@@ -795,9 +795,10 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
 
     // backup original bytes to be overwritten by hook
 #if defined(_M_X64) || defined(__x86_64__)
-    const size_t patch_len = 14;
+    size_t patch_len = 0;
+    if (emit::jmp_auto(h->patch, (uint8_t*)target + 5, detour)) patch_len = 5; else patch_len = 14;
 #else
-    const size_t patch_len = 5;
+    size_t patch_len = 5; emit::jmp_rel32(h->patch, (intptr_t)detour - ((intptr_t)target + 5));
 #endif
     size_t backed = 0; size_t pos = 0;
     while (backed < patch_len) {
@@ -808,6 +809,7 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
         pos += l; backed += l;
     }
     h->backed_len = (uint8_t)pos;
+    h->patch_len = (uint8_t)patch_len;
 
     if (original) *original = h->tramp;
     leave_spin();
@@ -882,11 +884,11 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
     if (!g_heap) return status::not_initialized;
     enter_spin();
     if (target == nullptr) {
-        for (uint32_t i = 0; i < g_hooks_size; ++i) g_hooks[i].queued = 1;
+        for (uint32_t i = 0; i < g_hooks_size; ++i) if (!g_hooks[i].enabled) g_hooks[i].queued = 1;
     } else {
         uint32_t idx = find_hook(target);
         if (idx == UINT32_MAX) { leave_spin(); return status::not_created; }
-        g_hooks[idx].queued = 1;
+        if (!g_hooks[idx].enabled) g_hooks[idx].queued = 1;
     }
     leave_spin();
     return status::ok;
@@ -896,11 +898,11 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
     if (!g_heap) return status::not_initialized;
     enter_spin();
     if (target == nullptr) {
-        for (uint32_t i = 0; i < g_hooks_size; ++i) g_hooks[i].queued = 0;
+        for (uint32_t i = 0; i < g_hooks_size; ++i) if (g_hooks[i].enabled) g_hooks[i].queued = 0;
     } else {
         uint32_t idx = find_hook(target);
         if (idx == UINT32_MAX) { leave_spin(); return status::not_created; }
-        g_hooks[idx].queued = 0;
+        if (g_hooks[idx].enabled) g_hooks[idx].queued = 0;
     }
     leave_spin();
     return status::ok;
@@ -913,8 +915,28 @@ inline JN_FORCEINLINE status enable_ll(uint32_t pos, bool enable) noexcept {
     if (first == UINT32_MAX) { leave_spin(); return status::ok; }
     frozen_threads ft{}; if (!freeze_threads(UINT32_MAX, true, &ft)) { leave_spin(); return status::memory_alloc; }
     status st = status::ok;
+    // Batch protect per target to reduce kernel transitions
     for (uint32_t i = first; i < g_hooks_size; ++i) {
-        if (g_hooks[i].enabled != g_hooks[i].queued) { st = enable_ll(i, g_hooks[i].queued != 0); if (st != status::ok) break; }
+        if (g_hooks[i].enabled == g_hooks[i].queued) continue;
+        hook_rec& h = g_hooks[i];
+        const size_t hook_sz = h.patch_len;
+        DWORD old{};
+        if (!VirtualProtect(h.target, hook_sz, PAGE_EXECUTE_READWRITE, &old)) { st = status::memory_protect; break; }
+        const bool to_enable = (h.queued != 0);
+        if (to_enable) {
+            if (hook_sz == 5) {
+                *(int32_t*)((uint8_t*)h.target + 1) = *(const int32_t*)(h.patch + 1);
+                *(uint8_t*)h.target = *h.patch;
+            } else {
+                std::memcpy(h.target, h.patch, hook_sz);
+            }
+        } else {
+            std::memcpy(h.target, h.backup, h.backed_len);
+            if (h.backed_len < hook_sz) std::memset((uint8_t*)h.target + h.backed_len, 0x90, hook_sz - h.backed_len);
+        }
+        VirtualProtect(h.target, hook_sz, old, &old);
+        FlushInstructionCache(GetCurrentProcess(), h.target, hook_sz);
+        h.enabled = to_enable ? 1 : 0;
     }
     unfreeze_threads(&ft);
     leave_spin();

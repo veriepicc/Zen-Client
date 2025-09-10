@@ -77,11 +77,11 @@ export namespace Memory
         {
             for (const auto& h : hooks)
             {
-                Jonathan::disable_hook(h.target);
-                Jonathan::remove_hook(h.target);
+                (void)Jonathan::disable_hook(h.target);
+                (void)Jonathan::remove_hook(h.target);
             }
             hooks.clear();
-            if (initialized) Jonathan::shutdown();
+            if (initialized) (void)Jonathan::shutdown();
             initialized = false;
         }
 

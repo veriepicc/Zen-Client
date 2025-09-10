@@ -36,7 +36,7 @@ public:
         if (!initialized) return;
         disableAll();
         removeAll();
-        Jonathan::shutdown();
+        (void)Jonathan::shutdown();
         initialized = false;
     }
 

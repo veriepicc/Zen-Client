@@ -282,6 +282,7 @@ export namespace ImGui_ImplBigRat
                 return true;
             }
         }
+        return false; // failed to load/create texture
     }
 
     bool Init(MinecraftUIRenderContext* rc)
