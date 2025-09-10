@@ -10,16 +10,31 @@ import SigManager;
 import OffsetManager;
 import LevelRenderer;
 import ScreenContext;
+import Module;
 
 using RenderLevelFunction = void(*)(LevelRenderer*, ScreenContext*, void*);
 RenderLevelFunction originalFunction = nullptr;
 
 void LevelRenderer_renderLevel(LevelRenderer* a1, ScreenContext* screenContext, void* a3) {
-    auto camPos = a1->getLevelRendererPlayer()->getCameraPos();
+    static bool loggedOnce = false;
+    static int frameCounter = 0;
+    if (originalFunction)
+        originalFunction(a1, screenContext, a3);
 
-    std::cout << a1->getLevelRendererPlayer() << "\r";
-
-    originalFunction(a1, screenContext, a3);
+    if (a1 && screenContext)
+    {
+        if (!loggedOnce)
+        {
+            std::cout << "[RenderLevel] first call ok lr=" << a1 << " sc=" << screenContext << std::endl;
+            loggedOnce = true;
+        }
+        if ((++frameCounter % 120) == 0)
+        {
+            auto cam = a1->getLevelRendererPlayer()->getCameraPos();
+            std::cout << std::format("[RenderLevel] cam=({}, {}, {})", cam.x, cam.y, cam.z) << std::endl;
+        }
+        Modules::WorldRenderTick(a1, screenContext);
+    }
 }
 
 export namespace Hooks::Render::RenderLevel {
@@ -33,11 +48,13 @@ export namespace Hooks::Render::RenderLevel {
         }
 
         auto& hookManager = GetHookManager();
-        return hookManager.hook<RenderLevelFunction>(
+        bool ok = hookManager.hook<RenderLevelFunction>(
             target,
             LevelRenderer_renderLevel,
             &originalFunction
         );
+        if (ok) std::cout << "[RenderLevel] hook installed" << std::endl;
+        return ok;
     }
 }
 

@@ -16,6 +16,8 @@ export module Module;
 
 import Utils;
 import MinecraftUIRenderContext;
+import LevelRenderer;
+import ScreenContext;
 
 export enum class Category
 {
@@ -116,6 +118,7 @@ public:
     virtual void onDisable() {}
     virtual void onUpdate() {}
     virtual void onRender(MinecraftUIRenderContext* /*rc*/) {}
+    virtual void onWorldRender(LevelRenderer* /*lr*/, ScreenContext* /*sc*/) {}
 
     using SettingList = std::vector<Setting>;
 
@@ -241,6 +244,17 @@ export namespace Modules
             if (module != nullptr && module->enabledRef())
             {
                 module->onRender(rc);
+            }
+        }
+    }
+
+    export inline void WorldRenderTick(LevelRenderer* lr, ScreenContext* sc)
+    {
+        for (Module* module : All())
+        {
+            if (module != nullptr && module->enabledRef())
+            {
+                module->onWorldRender(lr, sc);
             }
         }
     }

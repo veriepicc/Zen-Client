@@ -14,6 +14,14 @@ import Utils;
 import SDK;
 import MinecraftUIRenderContext;
 import OffsetManager;
+import LevelRenderer;
+import ScreenContext;
+import Tesselator;
+import MaterialPtr;
+import HashedString;
+import PrimitiveMode;
+import Math;
+import MeshHelpers;
 
 export class ClickGui : public Module
 {
@@ -41,110 +49,94 @@ public:
     }
     void onDisable() override {}
     void onUpdate() override {}
-    void onRender(MinecraftUIRenderContext* /*rc*/) override
+    void onRender(MinecraftUIRenderContext* /*rc*/) override {}
+
+    void onWorldRender(LevelRenderer* lr, ScreenContext* sc) override
     {
         if (!enabledRef()) return;
+        if (!lr || !sc) return;
 
-        static int selectedCategory = static_cast<int>(Category::Combat);
-        static Module* selectedModule = nullptr;
+        Tessellator* tess = sc->getTessellator();
+        if (!tess) return;
 
-        ImGui::SetNextWindowSize(ImVec2(720.0f, 460.0f), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowPos(ImVec2(120.0f, 90.0f), ImGuiCond_FirstUseEver);
-        if (ImGui::Begin("Zen ClickGui", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
+        static MaterialPtr* mat = nullptr;
+        if (!mat)
         {
-            if (ImGui::BeginTabBar("Categories"))
-            {
-                for (int i = 0; i < 6; ++i)
-                {
-                    const Category cat = static_cast<Category>(i);
-                    std::string catName(std::string(categoryName(cat)));
-                    if (ImGui::BeginTabItem(catName.c_str()))
-                    {
-                        selectedCategory = i;
-
-                        auto view = Modules::ByCategory(cat);
-                        ImGui::Columns(2, nullptr, false);
-
-                        // Left: modules list
-                        for (Module* m : view)
-                        {
-                            if (!m) continue;
-                            bool isEnabled = m->enabledRef();
-                            std::string chkId = std::string("##toggle_") + m->nameRef();
-                            if (ImGui::Checkbox(chkId.c_str(), &isEnabled))
-                            {
-                                m->setEnabled(isEnabled);
-                            }
-                            ImGui::SameLine();
-                            if (ImGui::Selectable(m->nameRef().c_str(), selectedModule == m))
-                            {
-                                selectedModule = m;
-                            }
-                        }
-
-                        ImGui::NextColumn();
-
-                        // Right: selected module settings
-                        if (selectedModule)
-                        {
-                            ImGui::TextUnformatted(selectedModule->nameRef().c_str());
-                            ImGui::Separator();
-
-                            auto& settings = selectedModule->settingsRef();
-                            for (auto& s : settings)
-                            {
-                                if (auto pb = std::get_if<bool>(&s.value))
-                                {
-                                    bool v = *pb;
-                                    if (ImGui::Checkbox(s.name.c_str(), &v))
-                                        *pb = v;
-                                }
-                                else if (auto pi = std::get_if<int>(&s.value))
-                                {
-                                    int v = *pi;
-                                    int minV = s.intBounds ? s.intBounds->first : 0;
-                                    int maxV = s.intBounds ? s.intBounds->second : 100;
-                                    if (ImGui::SliderInt(s.name.c_str(), &v, minV, maxV))
-                                        *pi = v;
-                                }
-                                else if (auto pf = std::get_if<float>(&s.value))
-                                {
-                                    float v = *pf;
-                                    float minV = s.floatBounds ? s.floatBounds->first : 0.0f;
-                                    float maxV = s.floatBounds ? s.floatBounds->second : 1.0f;
-                                    if (ImGui::SliderFloat(s.name.c_str(), &v, minV, maxV))
-                                        *pf = v;
-                                }
-                                else if (auto pc = std::get_if<Color>(&s.value))
-                                {
-                                    float col[4] = { pc->r / 255.0f, pc->g / 255.0f, pc->b / 255.0f, pc->a / 255.0f };
-                                    if (ImGui::ColorEdit4(s.name.c_str(), col))
-                                    {
-                                        pc->r = static_cast<std::uint8_t>(col[0] * 255.0f);
-                                        pc->g = static_cast<std::uint8_t>(col[1] * 255.0f);
-                                        pc->b = static_cast<std::uint8_t>(col[2] * 255.0f);
-                                        pc->a = static_cast<std::uint8_t>(col[3] * 255.0f);
-                                    }
-                                }
-                                else if (auto ps = std::get_if<std::string>(&s.value))
-                                {
-                                    char buf[256] = {};
-                                    const size_t copyLen = (std::min)(ps->size(), sizeof(buf) - 1);
-                                    std::memcpy(buf, ps->c_str(), copyLen);
-                                    if (ImGui::InputText(s.name.c_str(), buf, sizeof(buf)))
-                                        *ps = std::string(buf);
-                                }
-                            }
-                        }
-
-                        ImGui::Columns(1);
-                        ImGui::EndTabItem();
-                    }
-                }
-                ImGui::EndTabBar();
-            }
+            HashedString name("ui_fill_color");
+            mat = MaterialPtr::createUIMaterial(name);
+            if (!mat) mat = MaterialPtr::createMaterial(name);
         }
-        ImGui::End();
+        if (!mat) return;
+
+        const auto cam = lr->getLevelRendererPlayer()->getCameraPos();
+        static int logEvery = 0;
+
+        const float panelWidth = 100.4f;
+        const float panelHeight = 100.4f;
+        const float sideOffset = 10.3f;     // how far to the right of the camera
+        const float forwardOffset = 1.25f; // small nudge in front so not inside camera
+
+        const float cx = cam.x + sideOffset;
+        const float cy = cam.y + 1.5f;
+        const float cz = cam.z - forwardOffset; // nudge in front, anchored next to camera
+        if ((++logEvery % 120) == 1)
+        {
+            std::cout << "[ClickGui3D] cam=(" << cam.x << ", " << cam.y << ", " << cam.z << ")";
+            std::cout << " panel center=(" << cx << ", " << cy << ", " << cz << ")" << std::endl;
+        }
+
+        const float x0 = cx - panelWidth * 0.5f;
+        const float y0 = cy - panelHeight * 0.5f;
+        const float x1 = cx + panelWidth * 0.5f;
+        const float y1 = cy + panelHeight * 0.5f;
+        const float z = cz;
+
+        // Quad 1: plane perpendicular to Z axis (vertical panel)
+        tess->begin(mce::PrimitiveMode::TriangleList, 6, false);
+        tess->color(0.95f, 0.10f, 0.20f, 0.85f);
+        // front face
+        tess->vertex(x0, y0, z);
+        tess->vertex(x1, y0, z);
+        tess->vertex(x1, y1, z);
+        tess->vertex(x0, y0, z);
+        tess->vertex(x1, y1, z);
+        tess->vertex(x0, y1, z);
+        // back face (double-sided)
+        tess->vertex(x1, y1, z);
+        tess->vertex(x1, y0, z);
+        tess->vertex(x0, y0, z);
+        tess->vertex(x0, y1, z);
+        tess->vertex(x1, y1, z);
+        tess->vertex(x0, y0, z);
+        MeshHelpers::renderMeshImmediately(sc, tess, mat);
+
+        // Quad 2: plane perpendicular to X axis (vertical panel), same center
+        const float zx0 = cz - panelWidth * 0.5f;
+        const float zx1 = cz + panelWidth * 0.5f;
+        const float xx = cx;
+        tess->begin(mce::PrimitiveMode::TriangleList, 6, false);
+        tess->color(0.10f, 0.70f, 0.30f, 0.85f);
+        // front face
+        tess->vertex(xx, y0, zx0);
+        tess->vertex(xx, y0, zx1);
+        tess->vertex(xx, y1, zx1);
+        tess->vertex(xx, y0, zx0);
+        tess->vertex(xx, y1, zx1);
+        tess->vertex(xx, y1, zx0);
+        // back face (double-sided)
+        tess->vertex(xx, y1, zx1);
+        tess->vertex(xx, y0, zx1);
+        tess->vertex(xx, y0, zx0);
+        tess->vertex(xx, y1, zx0);
+        tess->vertex(xx, y1, zx1);
+        tess->vertex(xx, y0, zx0);
+        MeshHelpers::renderMeshImmediately(sc, tess, mat);
+
+        static int drawLog = 0;
+        if ((++drawLog % 180) == 2)
+        {
+            std::cout << "[ClickGui3D] submitted 2 quads at center z=" << z << " and center x=" << xx << std::endl;
+        }
     }
 };
 
