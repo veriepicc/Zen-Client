@@ -39,6 +39,7 @@ public:
     static void initialize()
     {
         for (const auto& init : initializers) init();
+        Memory::ResolveSignatureQueue(sigs);
     }
 
     static void deinitialize()

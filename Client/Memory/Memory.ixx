@@ -10,13 +10,53 @@ module;
 #include <string>
 #include <functional>
 #include <unordered_map>
+#include <span>
+#include <algorithm>
+#include <execution>
 
 #include <libhat/libhat.hpp>
 
 export module Memory;
 
+// Internal-only implementation details (not exported)
+namespace Memory::detail
+{
+    enum class SignatureKind { Direct, Reference };
+
+    struct QueuedSignatureRequest
+    {
+        std::string name;
+        std::vector<hat::signature_element> pattern;
+        int relativeOffset;
+        void** outPtr;
+        SignatureKind kind;
+        std::string section;
+    };
+
+    inline std::vector<QueuedSignatureRequest> queuedSignatureRequests;
+
+    inline void enqueueSignature(std::string name,
+                                 std::vector<hat::signature_element> pattern,
+                                 int relativeOffset,
+                                 void** outPtr,
+                                 SignatureKind kind,
+                                 std::string section)
+    {
+        queuedSignatureRequests.push_back(QueuedSignatureRequest{
+            std::move(name),
+            std::move(pattern),
+            relativeOffset,
+            outPtr,
+            kind,
+            std::move(section)
+        });
+    }
+}
+
 export namespace Memory
 {
+    using detail::SignatureKind;
+
     template <typename R, typename... Args>
     R CallFunc(void* func, Args... args)
     {
@@ -113,38 +153,133 @@ export namespace Memory
         Hooks().shutdown();
     }
 
-    // Signature scanning utilities (used by SigManager macros)
     export inline std::uintptr_t ScanSignature(std::span<const hat::signature_element> sig,
                                                int relativeOffset = 0,
                                                std::string_view section = ".text")
     {
         const auto mod = hat::process::get_process_module();
-        auto res = hat::find_pattern(sig, section, mod);
+
+        auto res = hat::find_pattern<hat::scan_alignment::X16>(sig, section, mod);
+        if (!res.has_result())
+            res = hat::find_pattern<hat::scan_alignment::X1>(sig, section, mod);
         if (!res.has_result()) return 0;
         return relativeOffset == 0
             ? reinterpret_cast<std::uintptr_t>(res.get())
             : reinterpret_cast<std::uintptr_t>(res.rel(static_cast<size_t>(relativeOffset)));
     }
 
-    // Factory that creates an initializer to resolve a signature and store the result
+    
+    inline void EnqueueSignature(std::string name,
+                                 std::vector<hat::signature_element> pattern,
+                                 int relativeOffset,
+                                 void** outPtr,
+                                 SignatureKind kind,
+                                 std::string section)
+    {
+        detail::enqueueSignature(std::move(name), std::move(pattern), relativeOffset, outPtr, kind, std::move(section));
+    }
+
+    
+    export inline void ResolveSignatureQueue(std::unordered_map<std::string, std::uintptr_t>& store)
+    {
+        if (detail::queuedSignatureRequests.empty()) return;
+
+        
+        std::unordered_map<std::string, std::span<std::byte>> sectionCache;
+        const auto mod = hat::process::get_process_module();
+        for (const auto& q : detail::queuedSignatureRequests)
+        {
+            if (sectionCache.find(q.section) == sectionCache.end())
+            {
+                sectionCache.emplace(q.section, hat::process::get_section_data(mod, q.section));
+            }
+        }
+
+
+        const std::size_t count = detail::queuedSignatureRequests.size();
+        std::vector<std::size_t> indices(count);
+        for (std::size_t i = 0; i < count; ++i) indices[i] = i;
+        std::vector<std::uintptr_t> results(count, 0);
+
+        
+        std::for_each(std::execution::par_unseq, indices.begin(), indices.end(), [&](std::size_t i)
+        {
+            const auto& q = detail::queuedSignatureRequests[i];
+            const auto it = sectionCache.find(q.section);
+            if (it == sectionCache.end()) return;
+            const auto sec = it->second;
+            if (sec.empty()) return;
+
+            auto res = hat::find_pattern<hat::scan_alignment::X16>(
+                sec.begin(),
+                sec.end(),
+                std::span<const hat::signature_element>{q.pattern},
+                hat::scan_hint::x86_64
+            );
+
+            if (!res.has_result())
+            {
+           
+                res = hat::find_pattern<hat::scan_alignment::X1>(
+                    sec.begin(),
+                    sec.end(),
+                    std::span<const hat::signature_element>{q.pattern},
+                    hat::scan_hint::x86_64
+                );
+                if (!res.has_result())
+                {
+                    results[i] = 0;
+                    return;
+                }
+            }
+
+            if (q.kind == SignatureKind::Direct)
+            {
+                if (q.relativeOffset == 0)
+                {
+                    results[i] = reinterpret_cast<std::uintptr_t>(res.get());
+                }
+                else
+                {
+                    results[i] = reinterpret_cast<std::uintptr_t>(res.rel(static_cast<size_t>(q.relativeOffset)));
+                }
+            }
+            else
+            {
+                const auto base = reinterpret_cast<std::uintptr_t>(res.get());
+                const auto ptrLocation = base + static_cast<std::uintptr_t>(q.relativeOffset);
+                results[i] = *reinterpret_cast<const std::uintptr_t*>(ptrLocation);
+            }
+        });
+
+
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            const auto& q = detail::queuedSignatureRequests[i];
+            const auto addr = results[i];
+            *q.outPtr = addr ? reinterpret_cast<void*>(addr) : nullptr;
+            store[q.name] = addr;
+        }
+
+        detail::queuedSignatureRequests.clear();
+    }
+
     inline std::function<void()> MakeSigInitializer(const char* name,
                                                           std::span<const hat::signature_element> sig,
                                                           int relativeOffset,
                                                           void** outPtr,
                                                           std::unordered_map<std::string, std::uintptr_t>& store,
                                                           std::string_view section = ".text")
-    {
-        // Copy values into the closure; store and outPtr kept by reference
+    { 
         std::string nameCopy(name);
         std::vector<hat::signature_element> pattern(sig.begin(), sig.end());
         return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), relativeOffset, outPtr, &store, section]() mutable {
-            auto addr = ScanSignature(std::span{pattern}, relativeOffset, section);
-            *outPtr = addr ? reinterpret_cast<void*>(addr) : nullptr;
-            store[nameCopy] = addr;
+            (void)store; 
+            EnqueueSignature(std::move(nameCopy), std::move(pattern), relativeOffset, outPtr, SignatureKind::Direct, std::string(section));
         };
     }
 
-    // Overload that accepts a fixed_signature (std::array) directly
+   
     template <typename FixedSig>
     inline std::function<void()> MakeSigInitializer(const char* name,
                                                            const FixedSig& fixed,
@@ -156,13 +291,12 @@ export namespace Memory
         std::string nameCopy(name);
         std::vector<hat::signature_element> pattern(fixed.begin(), fixed.end());
         return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), relativeOffset, outPtr, &store, section]() mutable {
-            auto addr = ScanSignature(std::span{pattern}, relativeOffset, section);
-            *outPtr = addr ? reinterpret_cast<void*>(addr) : nullptr;
-            store[nameCopy] = addr;
+            (void)store; 
+            EnqueueSignature(std::move(nameCopy), std::move(pattern), relativeOffset, outPtr, SignatureKind::Direct, std::string(section));
         };
     }
 
-    // Factory for reference signatures: read pointer at (match + relativeOffset)
+   
     inline std::function<void()> MakeRefSigInitializer(const char* name,
                                                        std::span<const hat::signature_element> sig,
                                                        int relativeOffset,
@@ -173,19 +307,12 @@ export namespace Memory
         std::string nameCopy(name);
         std::vector<hat::signature_element> pattern(sig.begin(), sig.end());
         return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), relativeOffset, outPtr, &store, section]() mutable {
-            auto base = ScanSignature(std::span{pattern}, 0, section);
-            std::uintptr_t finalAddr = 0;
-            if (base != 0)
-            {
-                auto ptrLocation = base + static_cast<std::uintptr_t>(relativeOffset);
-                finalAddr = *reinterpret_cast<const std::uintptr_t*>(ptrLocation);
-            }
-            *outPtr = finalAddr ? reinterpret_cast<void*>(finalAddr) : nullptr;
-            store[nameCopy] = finalAddr;
+            (void)store; 
+            EnqueueSignature(std::move(nameCopy), std::move(pattern), relativeOffset, outPtr, SignatureKind::Reference, std::string(section));
         };
     }
 
-    // Overload for fixed signatures (std::array)
+   
     template <typename FixedSig>
     inline std::function<void()> MakeRefSigInitializer(const char* name,
                                                        const FixedSig& fixed,
@@ -197,19 +324,12 @@ export namespace Memory
         std::string nameCopy(name);
         std::vector<hat::signature_element> pattern(fixed.begin(), fixed.end());
         return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), relativeOffset, outPtr, &store, section]() mutable {
-            auto base = ScanSignature(std::span{pattern}, 0, section);
-            std::uintptr_t finalAddr = 0;
-            if (base != 0)
-            {
-                auto ptrLocation = base + static_cast<std::uintptr_t>(relativeOffset);
-                finalAddr = *reinterpret_cast<const std::uintptr_t*>(ptrLocation);
-            }
-            *outPtr = finalAddr ? reinterpret_cast<void*>(finalAddr) : nullptr;
-            store[nameCopy] = finalAddr;
+            (void)store; 
+            EnqueueSignature(std::move(nameCopy), std::move(pattern), relativeOffset, outPtr, SignatureKind::Reference, std::string(section));
         };
     }
 
-    // Convenience: safely access a member at byte offset without including libhat in each module
+    
     template<typename MemberType, typename Base>
     inline auto& MemberAt(Base* ptr, std::size_t offset)
     {
