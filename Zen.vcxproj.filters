@@ -57,21 +57,6 @@
     <ClCompile Include="Client\Module\Misc\AutoGG.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Include\minhook\buffer.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Include\minhook\hook.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Include\minhook\trampoline.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Include\minhook\hde\hde32.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Include\minhook\hde\hde64.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
