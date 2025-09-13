@@ -59,6 +59,12 @@ namespace Hooks::Render::SetupAndRender
         {
             ImGui_ImplBigRat::NewFrame(1.0f / 60.0f, 0.0f, 0.0f, 1.0f, 1.0f);
             ImGui::NewFrame();
+            
+            // Disable ImGui input capture so it doesn't interfere with game controls
+            ImGuiIO& io = ImGui::GetIO();
+            io.WantCaptureKeyboard = false;
+            io.WantCaptureMouse = false;
+            io.WantTextInput = false;
             // Try to fetch texture handle if we have a resource location
             if (!State::imageTexture.clientTexture && State::imageTexture.resourceLocation)
             {
@@ -149,6 +155,15 @@ namespace Hooks::Render::SetupAndRender
         if (!imguiInit)
         {
             ImGui_ImplBigRat::Init(renderContext);
+            
+            // Configure ImGui to not capture input by default
+            ImGuiIO& io = ImGui::GetIO();
+            io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+            io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
+            io.WantCaptureKeyboard = false;
+            io.WantCaptureMouse = false;
+            io.WantTextInput = false;
+            
             imguiInit = true;
         }
 

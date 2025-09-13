@@ -297,6 +297,13 @@ export namespace ImGui_ImplBigRat
         ImGuiIO& io = ImGui::GetIO();
         io.BackendRendererName = "imgui_impl_bigrat";
         io.IniFilename = nullptr;
+        
+        // Disable all input capture
+        io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+        io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
+        io.WantCaptureKeyboard = false;
+        io.WantCaptureMouse = false;
+        io.WantTextInput = false;
 
         //
 
@@ -331,38 +338,48 @@ export namespace ImGui_ImplBigRat
 
     void AddMousePosEvent(float x, float y)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        io.AddMousePosEvent(x, y);
+        // Disabled: ImGui won't capture mouse position
+        // ImGuiIO& io = ImGui::GetIO();
+        // io.AddMousePosEvent(x, y);
     }
 
     void AddMouseButtonEvent(int button, bool down)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        io.AddMouseButtonEvent(button, down);
+        // Disabled: ImGui won't capture mouse clicks
+        // ImGuiIO& io = ImGui::GetIO();
+        // io.AddMouseButtonEvent(button, down);
     }
 
     void AddMouseWheelEvent(float wheel)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        io.AddMouseWheelEvent(0.0f, wheel);
+        // Disabled: ImGui won't capture mouse wheel
+        // ImGuiIO& io = ImGui::GetIO();
+        // io.AddMouseWheelEvent(0.0f, wheel);
     }
 
     void AddKeyEvent(int imguiKey, bool down)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        io.AddKeyEvent((ImGuiKey)imguiKey, down);
+        // Disabled: ImGui won't capture keyboard input
+        // ImGuiIO& io = ImGui::GetIO();
+        // io.AddKeyEvent((ImGuiKey)imguiKey, down);
     }
 
     void AddInputCharactersUTF8(const char* text)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        io.AddInputCharactersUTF8(text);
+        // Disabled: ImGui won't capture text input
+        // ImGuiIO& io = ImGui::GetIO();
+        // io.AddInputCharactersUTF8(text);
     }
 
     void NewFrame(float delta_time, float display_w, float display_h, float scale_x, float scale_y)
     {
         ImGuiIO& io = ImGui::GetIO();
         io.DeltaTime = (delta_time > 0.f) ? delta_time : (1.0f / 60.0f);
+        
+        // Ensure input capture is disabled every frame
+        io.WantCaptureKeyboard = false;
+        io.WantCaptureMouse = false;
+        io.WantTextInput = false;
 
         if (GetState()->rc)
         {

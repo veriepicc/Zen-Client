@@ -24,9 +24,17 @@ import HashedString;
 import PrimitiveMode;
 import Math;
 import MeshHelpers;
+import TexturePtr;
+import ResourceLocation;
+import Color;
+import BedrockTextureData;
 
 export class ClickGui : public Module
 {
+private:
+    bool worldImageInitialized = false;
+    BedrockTextureData* worldImageTexture = nullptr;
+
 public:
     ClickGui()
         : Module("ClickGui", "Displays the clickable GUI for modules.", Category::Visual)
@@ -34,7 +42,6 @@ public:
         addSetting(Settings::color("ThemeColor", Color(146, 102, 204)));
         addSetting(Settings::decimal("Scale", 1.0f, 0.5f, 2.0f));
         addSetting(Settings::boolean("Rainbow", false));
-        setKeybind(Keys::Insert);
         Register();
     }
 
@@ -51,7 +58,14 @@ public:
     }
     void onDisable() override {}
     void onUpdate() override {}
-    void onRender(MinecraftUIRenderContext* /*rc*/) override {}
+    void onRender(MinecraftUIRenderContext* rc) override 
+    {
+        // Try to get texture from the same source as SetupAndRender "Mart" window
+        if (!worldImageInitialized && rc)
+        {
+            initializeWorldImageTexture(rc);
+        }
+    }
 
     void onWorldRender(LevelRenderer* lr, ScreenContext* sc) override
     {
@@ -98,10 +112,18 @@ public:
 			vertices[i] = Math::Vec3{ rotatedVertex.x + newLowerReal.x, rotatedVertex.y + newLowerReal.y, rotatedVertex.z + newLowerReal.z };
 		}
 
-		tess->begin(mce::PrimitiveMode::QuadList);
-		static int v[48] = { 5, 7, 6, 4, 4, 6, 7, 5, 1, 3, 2, 0, 0, 2, 3, 1, 4, 5, 1, 0, 0, 1, 5, 4, 6, 7, 3, 2, 2, 3, 7, 6, 4, 6, 2, 0, 0, 2, 6, 4, 5, 7, 3, 1, 1, 3, 7, 5 };
-		for (int i = 0; i < 48; i++) tess->vertex(vertices[v[i]].x, vertices[v[i]].y, vertices[v[i]].z);
-		MeshHelpers::renderMeshImmediately(sc, tess, mat);
+		// Render Mart panel if we have the texture, otherwise wireframe cube
+		if (worldImageTexture)
+		{
+			renderMartPanel(lr, sc, tess);
+		}
+		else
+		{
+			tess->begin(mce::PrimitiveMode::QuadList);
+			static int v[48] = { 5, 7, 6, 4, 4, 6, 7, 5, 1, 3, 2, 0, 0, 2, 3, 1, 4, 5, 1, 0, 0, 1, 5, 4, 6, 7, 3, 2, 2, 3, 7, 6, 4, 6, 2, 0, 0, 2, 6, 4, 5, 7, 3, 1, 1, 3, 7, 5 };
+			for (int i = 0; i < 48; i++) tess->vertex(vertices[v[i]].x, vertices[v[i]].y, vertices[v[i]].z);
+			MeshHelpers::renderMeshImmediately(sc, tess, mat);
+		}
 
 		if (!outline) return;
 		tess->begin(mce::PrimitiveMode::LineList, 12);
@@ -129,6 +151,124 @@ public:
 
 #undef line
 		MeshHelpers::renderMeshImmediately(sc, tess, mat);
+    }
+
+private:
+    void initializeWorldImageTexture(MinecraftUIRenderContext* rc)
+    {
+        std::string base = Utils::GetRoamingPath();
+        if (!base.empty())
+        {
+            for (char& ch : base) if (ch == '\\') ch = '/';
+            const std::string path = base + "/image.png";
+            auto rl = std::make_shared<ResourceLocation>(ResourceLocation(path, true));
+            
+            // Try to create and load the texture
+            TexturePtr tp = rc->createTexture(path, true, true);
+            rc->touchTexture(*rl);
+            
+            TexturePtr fetched;
+            rc->getTexture(fetched, *rl, false);
+            if (fetched.clientTexture)
+            {
+                // Try to get BedrockTextureData from the TexturePtr
+                worldImageTexture = fetched.clientTexture.get();
+                worldImageInitialized = true;
+                std::cout << "[ClickGui] World image texture loaded successfully" << std::endl;
+            }
+            else
+            {
+                std::cout << "[ClickGui] Failed to load world image texture: " << path << std::endl;
+                std::cout << "[ClickGui] Make sure image.png exists in your AppData/Roaming folder" << std::endl;
+            }
+        }
+    }
+
+    void renderMartPanel(LevelRenderer* lr, ScreenContext* sc, Tessellator* tess)
+    {
+        // Get a textured material
+        static MaterialPtr* texMat = nullptr;
+        static bool materialDebugPrinted = false;
+        if (!texMat)
+        {
+            HashedString names[] = {
+                HashedString("ui_textured"),
+                HashedString("ui"),
+                HashedString("name_tag_depth_tested"),
+                HashedString("entity_alphatest"),
+                HashedString("entity"),
+                HashedString("basic")
+            };
+            
+            // Try UI materials first
+            for (int i = 0; i < 2 && !texMat; i++) {
+                texMat = MaterialPtr::createUIMaterial(names[i]);
+                if (texMat && !materialDebugPrinted) {
+                    std::cout << "[ClickGui] Using UI material for Mart panel: " << (i == 0 ? "ui_textured" : "ui") << std::endl;
+                    materialDebugPrinted = true;
+                }
+            }
+            
+            // Try regular materials
+            for (int i = 2; i < 6 && !texMat; i++) {
+                texMat = MaterialPtr::createMaterial(names[i]);
+                if (texMat && !materialDebugPrinted) {
+                    std::cout << "[ClickGui] Using material for Mart panel: " << 
+                        (i == 2 ? "name_tag_depth_tested" : 
+                         i == 3 ? "entity_alphatest" :
+                         i == 4 ? "entity" : "basic") << std::endl;
+                    materialDebugPrinted = true;
+                }
+            }
+            
+            if (!texMat && !materialDebugPrinted) {
+                std::cout << "[ClickGui] Failed to create any material for Mart panel" << std::endl;
+                materialDebugPrinted = true;
+            }
+        }
+        if (!texMat) return;
+
+        const auto cam = lr->getLevelRendererPlayer()->getCameraPos();
+        
+        // Create a simple vertical panel at a clean block position
+        auto centerPos = Math::Vec3<float>(295.5f, -58.0f, 93.5f); // Centered on a block
+        float panelWidth = 2.0f;
+        float panelHeight = 3.0f;
+        
+        // Create vertical panel vertices (facing north, adjust as needed)
+        Math::Vec3<float> panelVertices[4] = {
+            {centerPos.x - panelWidth/2 - cam.x, centerPos.y - cam.y,                centerPos.z - cam.z}, // Bottom-left
+            {centerPos.x + panelWidth/2 - cam.x, centerPos.y - cam.y,                centerPos.z - cam.z}, // Bottom-right
+            {centerPos.x + panelWidth/2 - cam.x, centerPos.y + panelHeight - cam.y,  centerPos.z - cam.z}, // Top-right
+            {centerPos.x - panelWidth/2 - cam.x, centerPos.y + panelHeight - cam.y,  centerPos.z - cam.z}  // Top-left
+        };
+
+        // UV coordinates for texture mapping
+        Math::Vec2<float> uv[4] = {
+            {0.0f, 1.0f}, // Bottom-left
+            {1.0f, 1.0f}, // Bottom-right
+            {1.0f, 0.0f}, // Top-right
+            {0.0f, 0.0f}  // Top-left
+        };
+
+        tess->begin(mce::PrimitiveMode::QuadList);
+        
+        // Ensure fully opaque color
+        tess->color(1.0f, 1.0f, 1.0f, 1.0f);
+        
+        // Add vertices with UV coordinates for single vertical panel
+        for (int i = 0; i < 4; i++)
+        {
+            tess->vertexUV(panelVertices[i].x, panelVertices[i].y, panelVertices[i].z, uv[i].x, uv[i].y);
+        }
+        
+        // Render with texture binding
+        static bool renderDebugPrinted = false;
+        if (!renderDebugPrinted) {
+            std::cout << "[ClickGui] Rendering Mart vertical panel!  (Flat)" << std::endl;
+            renderDebugPrinted = true;
+        }
+        MeshHelpers::renderMeshImmediately2(sc, tess, texMat, *worldImageTexture);
     }
 };
 
