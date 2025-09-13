@@ -292,6 +292,10 @@ struct insn_info {
     uint32_t flags;
     uint8_t opcode;
     uint8_t opcode2;
+    uint8_t disp_offset; // offset of disp8/disp32 from start (if present)
+    uint8_t rel_offset;  // offset of rel8/rel32 from start (if present)
+    uint8_t imm_offset;  // offset of imm8/imm16/imm32 from start (if present)
+    uint8_t riprel;      // 1 if uses RIP-relative addressing (mod==00, rm==101)
 };
 
 // Returns 0 on failure
@@ -299,6 +303,10 @@ struct insn_info {
     const uint8_t* p = code;
     uint8_t prefixes = 0;
     uint8_t rex = 0; // x64 REX
+    const uint8_t* disp_ptr = nullptr;
+    const uint8_t* rel_ptr = nullptr;
+    const uint8_t* imm_ptr = nullptr;
+    bool riprel = false;
 
     // prefixes
     for (int i = 0; i < 16; ++i) {
@@ -347,41 +355,45 @@ struct insn_info {
             ss = (sib >> 6) & 3; index = (sib >> 3) & 7; base = sib & 7;
         }
         if (mod == 0) {
-            if (rm == 5) { flags |= IDF_DISP32; p += 4; }
-            if ((flags & IDF_SIB) && base == 5) { flags |= IDF_DISP32; p += 4; }
+            if (rm == 5) { flags |= IDF_DISP32; disp_ptr = p; p += 4; riprel = true; }
+            if ((flags & IDF_SIB) && base == 5) { flags |= IDF_DISP32; disp_ptr = p; p += 4; }
         } else if (mod == 1) { flags |= IDF_DISP8;  p += 1; }
-        else if (mod == 2)   { flags |= IDF_DISP32; p += 4; }
+        else if (mod == 2)   { flags |= IDF_DISP32; disp_ptr = p; p += 4; }
     }
 
     // immediates / rel
     if (!(flags & IDF_OPCODE_0F)) {
-        if (op == 0xE8) { flags |= IDF_REL32; p += 4; }
-        else if (op == 0xE9) { flags |= IDF_REL32; p += 4; }
-        else if (op == 0xEB) { flags |= IDF_REL8;  p += 1; }
-        else if ((op & 0xF0) == 0x70) { flags |= IDF_REL8; p += 1; }
+        if (op == 0xE8) { flags |= IDF_REL32; rel_ptr = p; p += 4; }
+        else if (op == 0xE9) { flags |= IDF_REL32; rel_ptr = p; p += 4; }
+        else if (op == 0xEB) { flags |= IDF_REL8;  rel_ptr = p; p += 1; }
+        else if ((op & 0xF0) == 0x70) { flags |= IDF_REL8; rel_ptr = p; p += 1; }
         else if ((op & 0xF8) == 0xB8) {
 #if defined(_M_X64) || defined(__x86_64__)
-            if (rex & 0x8) { flags |= IDF_IMM32; p += 8; } else { flags |= IDF_IMM32; p += 4; }
+            if (rex & 0x8) { flags |= IDF_IMM32; imm_ptr = p; p += 8; } else { flags |= IDF_IMM32; imm_ptr = p; p += 4; }
 #else
-            flags |= IDF_IMM32; p += 4;
+            flags |= IDF_IMM32; imm_ptr = p; p += 4;
 #endif
         }
-        else if (op == 0x68) { flags |= IDF_IMM32; p += 4; }
-        else if (op == 0x6A) { flags |= IDF_IMM8;  p += 1; }
-        else if (op == 0xC2) { flags |= IDF_IMM16; p += 2; }
-        else if (op == 0x80) { if (!(flags & IDF_MODRM)) return 0; flags |= IDF_IMM8; p += 1; }
-        else if (op == 0x81) { if (!(flags & IDF_MODRM)) return 0; flags |= IDF_IMM32; p += 4; }
-        else if (op == 0x83) { if (!(flags & IDF_MODRM)) return 0; flags |= IDF_IMM8; p += 1; }
-        else if (op == 0xC7) { if (!(flags & IDF_MODRM)) return 0; flags |= IDF_IMM32; p += 4; }
+        else if (op == 0x68) { flags |= IDF_IMM32; imm_ptr = p; p += 4; }
+        else if (op == 0x6A) { flags |= IDF_IMM8;  imm_ptr = p; p += 1; }
+        else if (op == 0xC2) { flags |= IDF_IMM16; imm_ptr = p; p += 2; }
+        else if (op == 0x80) { if (!(flags & IDF_MODRM)) return 0; flags |= IDF_IMM8; imm_ptr = p; p += 1; }
+        else if (op == 0x81) { if (!(flags & IDF_MODRM)) return 0; flags |= IDF_IMM32; imm_ptr = p; p += 4; }
+        else if (op == 0x83) { if (!(flags & IDF_MODRM)) return 0; flags |= IDF_IMM8; imm_ptr = p; p += 1; }
+        else if (op == 0xC7) { if (!(flags & IDF_MODRM)) return 0; flags |= IDF_IMM32; imm_ptr = p; p += 4; }
         else { }
     } else {
-        if ((op2 & 0xF0) == 0x80) { flags |= IDF_REL32; p += 4; }
+        if ((op2 & 0xF0) == 0x80) { flags |= IDF_REL32; rel_ptr = p; p += 4; }
         
     }
 
     size_t len = (size_t)(p - code);
     if (len == 0 || len > 15) return 0;
-    if (out) { out->len = (uint8_t)len; out->flags = flags; out->opcode = op; out->opcode2 = op2; }
+    if (out) { out->len = (uint8_t)len; out->flags = flags; out->opcode = op; out->opcode2 = op2;
+        out->disp_offset = disp_ptr ? (uint8_t)(disp_ptr - code) : 0;
+        out->rel_offset  = rel_ptr ? (uint8_t)(rel_ptr - code) : 0;
+        out->imm_offset  = imm_ptr ? (uint8_t)(imm_ptr - code) : 0;
+        out->riprel = riprel ? 1 : 0; }
     return len;
 }
 
@@ -432,7 +444,7 @@ struct redirect_plan {
                     if (emit::jmp_auto(u + u_pos, (uint8_t*)u + u_pos + l, (void*)dst)) { u_pos += l; }
                     else { u_pos += 14; }
                 } else if ((ii.flags & IDF_OPCODE_0F) && (ii.opcode2 & 0xF0) == 0x80) {
-                    if (emit::jmp_auto(u + u_pos, (uint8_t*)u + u_pos + 6, (void*)dst)) { u_pos += 6; }
+                    if (emit::jmp_auto(u + u_pos, (uint8_t*)u + u_pos + 5, (void*)dst)) { u_pos += 5; }
                     else { u_pos += 14; }
                 } else {
                     emit::jmp_abs64(u + u_pos, (void*)dst); u_pos += 14;
@@ -477,6 +489,15 @@ struct redirect_plan {
         }
         else {
             std::memcpy(u + u_pos, t + copied, l);
+#if defined(_M_X64) || defined(__x86_64__)
+            if ((ii.flags & IDF_DISP32) && ii.riprel) {
+                int32_t old_disp = *(int32_t*)((t + copied) + ii.disp_offset);
+                uintptr_t src_next = (uintptr_t)(t + copied + l);
+                uintptr_t orig_target = src_next + (intptr_t)old_disp;
+                intptr_t new_disp = (intptr_t)orig_target - (intptr_t)((uintptr_t)(u + u_pos + l));
+                *(int32_t*)((u + u_pos) + ii.disp_offset) = (int32_t)new_disp;
+            }
+#endif
             u_pos += l;
         }
 
