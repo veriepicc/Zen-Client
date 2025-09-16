@@ -30,6 +30,7 @@ import imgui_impl_bigrat;
 import Module;
 import ResourceLocation;
 import Utils;
+import Global;
 
 
 namespace Hooks::Render::SetupAndRender
@@ -110,6 +111,7 @@ namespace Hooks::Render::SetupAndRender
             if (State::originalFunction) State::originalFunction(screenView, renderContext);
             return;
         }
+		if (!Global::getClientInstance()) Global::setClientInstance(renderContext->getClientInstance());
 
         State::drewOnceThisFrame = false;
 

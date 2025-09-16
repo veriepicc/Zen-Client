@@ -66,6 +66,14 @@ public:
                  "48 89 ? ? ? 48 89 ? ? ? 41 ? 41 ? 41 ? 48 83 EC ? 45 33 ? 45 8B",
                  SigType::Sig,
                  0)
+    REGISTER_SIG(BlockTypeRegistry_getDefaultBlockState,
+                 "48 89 5C 24 ? 55 56 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 ? 48 8B DA 48 8B F1 33 FF",
+                 SigType::Sig,
+                 0)
+    REGISTER_SIG(MinecraftGame_update,
+                 "48 8B ? 48 89 ? ? 48 89 ? ? 48 89 ? ? 55 41 ? 41 ? 41 ? 41 ? 48 8D ? ? ? ? ? 48 81 EC ? ? ? ? 0F 29 ? ? 0F 29 ? ? 48 8B ? ? ? ? ? 48 33 ? 48 89 ? ? ? ? ? 4C 8B ? C7 44 24 50",
+                 SigType::Sig,
+                 0)
     REGISTER_SIG(Setupandrender,
                  "48 8B C4 48 89 ?? ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D A8 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 0F 29 70 ?? 0F 29 78 ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 ?? ?? ?? ?? 4C 8B FA 48 89 55",
                  SigType::Sig,
@@ -130,6 +138,14 @@ public:
 
     REGISTER_SIG(createMaterial,
                 "48 8B 05 ? ? ? ? 48 8D 55 90 48 8D 0D ? ? ? ? 48 8B 40 08 FF 15 ? ? ? ? 48 8B D8",
+                SigType::Sig,
+                0)
+    REGISTER_SIG(BlockTessellatorCache_getBlock,
+                "48 89 ? ? ? 57 48 83 EC ? 48 8B ? 48 8B ? 48 8B ? 48 85 ? 75 ? 48 8D",
+                SigType::Sig,
+                0)
+    REGISTER_SIG(RenderChunkCoordinator_dirtyAll,
+                "48 89 ? ? ? 48 89 ? ? ? 48 89 ? ? ? 57 41 ? 41 ? 41 ? 41 ? 48 81 EC ? ? ? ? 48 8B ? ? ? ? ? 48 33 ? 48 89 ? ? ? ? ? ? 44 88",
                 SigType::Sig,
                 0)
     // RenderMaterialGroup::ui

@@ -31,7 +31,7 @@ void LevelRenderer_renderLevel(LevelRenderer* a1, ScreenContext* screenContext, 
         if ((++frameCounter % 120) == 0)
         {
             auto cam = a1->getLevelRendererPlayer()->getCameraPos();
-            std::cout << std::format("[RenderLevel] cam=({}, {}, {})", cam.x, cam.y, cam.z) << std::endl;
+            //std::cout << std::format("[RenderLevel] cam=({}, {}, {})", cam.x, cam.y, cam.z) << std::endl;
         }
         Modules::WorldRenderTick(a1, screenContext);
     }

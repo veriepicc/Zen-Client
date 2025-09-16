@@ -28,6 +28,7 @@ export namespace Offsets
     Offset(TextureGroup_loadedTextures, 0x178)  // 1.20.3X
 
     Offset(ClientInstance_getLevelRenderer_idx, 218)
+
     Offset(LevelRenderer_LevelRendererPlayer, 0x3F0)
     Offset(LevelRendererPlayer_cameraPos, 0x664)
 }

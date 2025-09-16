@@ -159,6 +159,21 @@
     <ClCompile Include="Client\Utils\Keys.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Client\SDK\Block\BlockSource.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\Hooks\Other\GetBlock.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\Global.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\Hooks\Other\MCGameUpdate.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\Hooks\Other\GetDefaultBlockState.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\imgui\impl\imgui_impl_bigrat.h">

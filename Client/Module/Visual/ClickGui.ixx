@@ -7,6 +7,8 @@ module;
 #include <algorithm>
 #include <variant>
 #include "imgui/imgui.h"
+#include <unordered_map>
+#include <memory>
 
 export module ClickGui;
 
@@ -24,10 +26,15 @@ import HashedString;
 import PrimitiveMode;
 import Math;
 import MeshHelpers;
+import Global;
+import Memory;
+import SigManager;
 
 export class ClickGui : public Module
 {
 public:
+	bool run = false;
+
     ClickGui()
         : Module("ClickGui", "Displays the clickable GUI for modules.", Category::Visual)
     {
@@ -40,6 +47,7 @@ public:
 
     void onEnable() override
     {
+		run = false;
         std::cout << "[ClickGui] Enabled" << std::endl;
         const auto& core = SDK::AllCore();
         std::cout << "[ClickGui] SDK core count=" << core.size() << std::endl;
@@ -49,17 +57,25 @@ public:
                   << " screenContext=0x" << Offsets::MinecraftUIRenderContext_screenContext
                   << std::dec << std::endl;
     }
-    void onDisable() override {}
+	void onDisable() override {}
     void onUpdate() override {}
     void onRender(MinecraftUIRenderContext* /*rc*/) override {}
 
-    void onWorldRender(LevelRenderer* lr, ScreenContext* sc) override
-    {
-        if (!enabledRef()) return;
-        if (!lr || !sc) return;
+	void onWorldRender(LevelRenderer* lr, ScreenContext* sc) override
+	{
+		if (!enabledRef()) return;
+		if (!lr || !sc) return;
 
-        Tessellator* tess = sc->getTessellator();
-        if (!tess) return;
+		Tessellator* tess = sc->getTessellator();
+		if (!tess) return;
+
+		//((void(__fastcall*)(_QWORD, __int64, _QWORD))RenderChunkCoordinator::_setAllDirty)(i[3], v5, 0i64);
+
+		//auto theMap = lr->renderChunkCoordinators;
+		//
+		//for (const auto& pair : theMap) {
+		//	pair.second->_setAllDirty();
+		//}
 
         static MaterialPtr* mat = nullptr;
         if (!mat)

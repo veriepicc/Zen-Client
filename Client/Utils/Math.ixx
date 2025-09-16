@@ -25,4 +25,5 @@ export namespace Math {
     };
 
     using Rect = RectT<float>;
+	using BlockPos = Vec3<int>;
 }
