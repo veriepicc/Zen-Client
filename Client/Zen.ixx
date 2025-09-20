@@ -27,13 +27,41 @@ namespace Zen::Detail
         FILE* fptr = nullptr;
         freopen_s(&fptr, "CONOUT$", "w", stdout);
         freopen_s(&fptr, "CONOUT$", "w", stderr);
-        freopen_s(&fptr, "CONIN$",  "r", stdin);
+        freopen_s(&fptr, "CONIN$", "r", stdin);
+    }
+
+    inline void FreeAndUnbindConsole()
+    {
+        FILE* fptr = nullptr;
+        freopen_s(&fptr, "NUL", "w", stdout);
+        freopen_s(&fptr, "NUL", "w", stderr);
+        freopen_s(&fptr, "NUL", "r", stdin);
+        FreeConsole();
     }
 }
 
 export namespace Zen
 {
     HMODULE Module;
+
+    namespace Detail
+    {
+        inline DWORD WINAPI EjectWorker(LPVOID)
+        {
+            Modules::DisableAll();
+
+            auto& hm = GetHookManager();
+            hm.disableAll();
+            Sleep(100);
+            hm.removeAll();
+
+            GetSoundPlayer().shutdown();
+            SigManager::deinitialize();
+            Detail::FreeAndUnbindConsole();
+            ExitThread(0);
+            return 0;
+        }
+    }
 
     inline void Initialize(HMODULE hModule)
     {
@@ -52,8 +80,8 @@ export namespace Zen
                 if (kv.second != 0) ++resolved; else ++missing;
             }
             std::cout << "[Zen] Signatures: total=" << sigs.size()
-                      << " resolved=" << resolved
-                      << " missing=" << missing << std::endl;
+                << " resolved=" << resolved
+                << " missing=" << missing << std::endl;
             SigManager::logStatus();
             if (missing > 0) {
                 std::cout << "[Zen] Missing signatures:" << std::endl;
@@ -69,26 +97,7 @@ export namespace Zen
         auto& hm = GetHookManager();
         hm.enableAll();
         GetSoundPlayer().initialize();
-        {
-            std::string base = Utils::GetRoamingPath();
-            if (!base.empty())
-            {
-                std::filesystem::path wav = std::filesystem::path(base) / "sound.wav";
-                if (GetSoundPlayer().loadWavFile("roam", wav.wstring()))
-                {
-                    GetSoundPlayer().play("roam", 0.9f, false);
-                }
-                else
-                {
-                    std::cout << "[Sound] Failed to load: " << wav.string() << ", using beep" << std::endl;
-                    //GetSoundPlayer().playOneShotSine(880.0f, 0.12f, 0.35f);
-                }
-            }
-            else
-            {
-                //GetSoundPlayer().playOneShotSine(880.0f, 0.12f, 0.35f);
-            }
-        }
+
         auto tAfterEnable = std::chrono::high_resolution_clock::now();
 
         auto sigMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterSigs - tStart).count();
@@ -96,15 +105,14 @@ export namespace Zen
         auto enableMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterEnable - tAfterHooks).count();
         auto totalMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterEnable - tStart).count();
         std::cout << "[Zen] init times: sigs=" << sigMs
-                  << "ms, hooks=" << hooksMs
-                  << "ms, enable=" << enableMs
-                  << "ms, total=" << totalMs << "ms" << std::endl;
+            << "ms, hooks=" << hooksMs
+            << "ms, enable=" << enableMs
+            << "ms, total=" << totalMs << "ms" << std::endl;
     }
 
     inline void Eject()
     {
-        Modules::DisableAll();
-        SigManager::deinitialize();
-        FreeLibraryAndExitThread(Module, 1);
+        HANDLE h = CreateThread(nullptr, 0, Detail::EjectWorker, nullptr, 0, nullptr);
+        if (h) CloseHandle(h);
     }
 }
