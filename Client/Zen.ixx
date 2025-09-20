@@ -33,8 +33,11 @@ namespace Zen::Detail
 
 export namespace Zen
 {
-    inline void Initialize()
+    HMODULE Module;
+
+    inline void Initialize(HMODULE hModule)
     {
+        Module = hModule;
         Detail::AllocateAndBindConsole();
         SetConsoleTitleW(L"Zen Client");
         std::cout.setf(std::ios::unitbuf);
@@ -86,7 +89,6 @@ export namespace Zen
                 //GetSoundPlayer().playOneShotSine(880.0f, 0.12f, 0.35f);
             }
         }
-        if (auto* clickGui = Modules::Find("ClickGui")) clickGui->setEnabled(true);
         auto tAfterEnable = std::chrono::high_resolution_clock::now();
 
         auto sigMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterSigs - tStart).count();
@@ -97,5 +99,12 @@ export namespace Zen
                   << "ms, hooks=" << hooksMs
                   << "ms, enable=" << enableMs
                   << "ms, total=" << totalMs << "ms" << std::endl;
+    }
+
+    inline void Eject()
+    {
+        Modules::DisableAll();
+        SigManager::deinitialize();
+        FreeLibraryAndExitThread(Module, 1);
     }
 }

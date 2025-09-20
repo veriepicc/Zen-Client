@@ -175,6 +175,9 @@
     <ClCompile Include="Client\Memory\Hooks\Block\GetDefaultBlockState.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Client\Module\Misc\Uninject.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\imgui\impl\imgui_impl_bigrat.h">
