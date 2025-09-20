@@ -8,16 +8,16 @@ import HookManager;
 import GuiData;
 import SigManager;
 
-using DisplayClientMessageFunction = void(*)(GuiData* guidata, std::optional<std::string>, bool);
+using DisplayClientMessageFunction = void(*)(GuiData*, const std::string&, std::optional<std::string>, bool);
 DisplayClientMessageFunction originalFunction = nullptr;
 
-void LevelRenderer_DisplayClientMessage(GuiData* guidata, std::optional<std::string> message, bool c) {
-    std::cout << message.value();
+void GuiData_DisplayClientMessage(GuiData* guidata, const std::string& message, std::optional<std::string> a, bool b) {
+    std::cout << message;
 
     static bool loggedOnce = false;
     static int frameCounter = 0;
     if (originalFunction)
-        originalFunction(guidata, message, c);
+        originalFunction(guidata, message, a, b);
 
     if (guidata)
     {
@@ -42,7 +42,7 @@ export namespace Hooks::Render::DisplayClientMessage {
         auto& hookManager = GetHookManager();
         bool ok = hookManager.hook<DisplayClientMessageFunction>(
             target,
-            LevelRenderer_DisplayClientMessage,
+            GuiData_DisplayClientMessage,
             &originalFunction
         );
         if (ok) std::cout << "[DisplayClientMessage] hook installed" << std::endl;
