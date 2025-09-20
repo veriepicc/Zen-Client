@@ -201,7 +201,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Client\dllmain.cpp" />
+    <ClCompile Include="Client\dllmain.cppm">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+      <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="Client\Memory\Global.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Block\GetBlock.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Block\GetDefaultBlockState.ixx" />
