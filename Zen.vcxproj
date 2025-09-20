@@ -201,7 +201,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Client\dllmain.cppm">
+    <ClCompile Include="Client\dllmain.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
       <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
