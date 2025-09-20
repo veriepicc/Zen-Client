@@ -86,8 +86,8 @@ export namespace Settings
 export class Module
 {
 public:
-    Module(std::string name, std::string description, Category category)
-        : name(std::move(name)), description(std::move(description)), category(category) {}
+    Module(std::string name, std::string description, Category category, int keybind = 0)
+        : name(std::move(name)), description(std::move(description)), category(category), keybind(keybind) {}
 
     virtual ~Module() = default;
 
@@ -107,11 +107,6 @@ public:
         if (enabled == enable) return;
         enabled = enable;
         if (enabled) onEnable(); else onDisable();
-    }
-
-    void setKeybind(int key)
-    {
-        keybind = key;
     }
 
     virtual void onEnable() {}
@@ -216,6 +211,14 @@ export namespace Modules
     export inline void Register(Module* module)
     {
         getRegistry().addModule(module);
+    }
+
+    export inline void DisableAll()
+    {
+        for (Module* module : All())
+        {
+			module->setEnabled(false);
+        }
     }
 
     export inline void HandleKeyEvent(int key, bool isDown)

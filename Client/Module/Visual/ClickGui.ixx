@@ -36,12 +36,11 @@ public:
 	bool run = false;
 
     ClickGui()
-        : Module("ClickGui", "Displays the clickable GUI for modules.", Category::Visual)
+        : Module("ClickGui", "Displays the clickable GUI for modules.", Category::Visual, Keys::Insert)
     {
         addSetting(Settings::color("ThemeColor", Color(146, 102, 204)));
         addSetting(Settings::decimal("Scale", 1.0f, 0.5f, 2.0f));
         addSetting(Settings::boolean("Rainbow", false));
-        setKeybind(Keys::Insert);
         Register();
     }
 

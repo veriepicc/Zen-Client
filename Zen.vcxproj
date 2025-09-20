@@ -208,6 +208,7 @@
     <ClCompile Include="Client\Memory\Hooks\Other\MCGameUpdate.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Render\BaseLightTexture.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Render\RenderLevel.ixx" />
+    <ClCompile Include="Client\Module\Misc\Uninject.ixx" />
     <ClCompile Include="Client\SDK\Block\BlockSource.ixx" />
     <ClCompile Include="Client\SDK\ClientInstance.ixx" />
     <ClCompile Include="Client\SDK\Render\HashedString.ixx">
