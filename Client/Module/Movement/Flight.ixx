@@ -22,4 +22,6 @@ public:
     void onRender(MinecraftUIRenderContext* /*rc*/) override {}
 };
 
+export Flight FlightInstance{};
+
 

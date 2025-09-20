@@ -17,7 +17,7 @@ import PrimitiveMode;
 import RectangleArea;
 import BedrockTextureData;
 import TexturePtr;
-import Math;
+import Paul;
 import Color;
 import Utils;
 import TextureGroup;

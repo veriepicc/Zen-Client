@@ -60,9 +60,7 @@
     <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Client\Utils\Math.ixx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    
     <ClCompile Include="Client\SDK\Render\HashedString.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -153,6 +151,9 @@
     <ClCompile Include="Client\Audio\SoundPlayer.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Client\Utils\Paul.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Client\Memory\Hooks\Render\BaseLightTexture.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -162,16 +163,16 @@
     <ClCompile Include="Client\SDK\Block\BlockSource.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Client\Memory\Hooks\Other\GetBlock.ixx">
+    <ClCompile Include="Client\Memory\Hooks\Block\GetBlock.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Client\Memory\Global.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Client\Memory\Hooks\Other\MCGameUpdate.ixx">
+    <ClCompile Include="Client\Memory\Hooks\Other\MinecraftGameUpdate.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Client\Memory\Hooks\Other\GetDefaultBlockState.ixx">
+    <ClCompile Include="Client\Memory\Hooks\Block\GetDefaultBlockState.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

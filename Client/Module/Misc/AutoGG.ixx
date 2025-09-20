@@ -21,4 +21,6 @@ public:
     void onRender(MinecraftUIRenderContext* /*rc*/) override {}
 };
 
+export AutoGG AutoGGInstance{};
+
 

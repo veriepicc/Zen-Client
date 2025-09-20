@@ -7,12 +7,12 @@ export module LevelRenderer;
 import SigManager;
 import OffsetManager;
 import Memory;
-import Math;
+import Paul;
 
 export class LevelRendererPlayer {
 public:
-	Math::Vec3<float> getCameraPos() {
-		return Memory::MemberAt<Math::Vec3<float>>(this, Offsets::LevelRendererPlayer_cameraPos);
+	Paul::Vec3<float> getCameraPos() {
+		return Memory::MemberAt<Paul::Vec3<float>>(this, Offsets::LevelRendererPlayer_cameraPos);
 	}
 };
 

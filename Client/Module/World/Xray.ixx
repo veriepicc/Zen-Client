@@ -23,4 +23,6 @@ public:
     void onRender(MinecraftUIRenderContext* /*rc*/) override {}
 };
 
+export Xray XrayInstance{};
+
 

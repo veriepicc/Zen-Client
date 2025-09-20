@@ -3,7 +3,7 @@ module;
 
 export module BlockSource;
 
-import Math;
+import Paul;
 import Memory;
 
 export class BlockLegacy {
@@ -21,7 +21,7 @@ public:
 };
 export class BlockSource {
 public:
-	Block* getBlock(const Math::BlockPos& pos) {
+	Block* getBlock(const Paul::BlockPos& pos) {
 		return Memory::CallVFunc<Block*>(2, this, pos);
 	}
 };

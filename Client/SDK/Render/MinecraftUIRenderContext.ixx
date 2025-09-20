@@ -17,7 +17,7 @@ import BedrockTexture;
 import BedrockTextureData;
 import Color;
 import HashedString;
-import Math;
+import Paul;
 import RectangleArea;
 
 
@@ -70,9 +70,9 @@ public:
         return texture;
     }
 
-    void drawImage(TexturePtr& texture, Math::Vec2<float>& pos, Math::Vec2<float>& size, Math::Vec2<float>& uvPos, Math::Vec2<float>& uvSize)
+    void drawImage(TexturePtr& texture, Paul::Vec2<float>& pos, Paul::Vec2<float>& size, Paul::Vec2<float>& uvPos, Paul::Vec2<float>& uvSize)
     {
-        Memory::CallVFunc<void, BedrockTextureData&, Math::Vec2<float>&, Math::Vec2<float>&, Math::Vec2<float>&, Math::Vec2<float>&, bool>(7, this, *texture.clientTexture, pos, size, uvPos, uvSize, false);
+        Memory::CallVFunc<void, BedrockTextureData&, Paul::Vec2<float>&, Paul::Vec2<float>&, Paul::Vec2<float>&, Paul::Vec2<float>&, bool>(7, this, *texture.clientTexture, pos, size, uvPos, uvSize, false);
     }
 
     void flushImages(mce::Color &color, float opacity, HashedString &hashedString)

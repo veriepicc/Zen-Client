@@ -5,18 +5,18 @@ export module GuiData;
 import SDK;
 import Memory;
 import OffsetManager;
-import Math;
+import Paul;
 
 export struct ClientInstance;
 
 export class GuiData {
 public:
-    Math::Vec2<float>& getScreenSize() {
-        return Memory::MemberAt<Math::Vec2<float>>(this, Offsets::GuiData_ScreenSize);
+    Paul::Vec2<float>& getScreenSize() {
+        return Memory::MemberAt<Paul::Vec2<float>>(this, Offsets::GuiData_ScreenSize);
     }
 
-    Math::Vec2<float>& getScreenSizeScaled() {
-        return Memory::MemberAt<Math::Vec2<float>>(this, Offsets::GuiData_ScreenSizeScaled);
+    Paul::Vec2<float>& getScreenSizeScaled() {
+        return Memory::MemberAt<Paul::Vec2<float>>(this, Offsets::GuiData_ScreenSizeScaled);
     }
 
     float& getGuiScale() {

@@ -13,7 +13,7 @@ import Memory;
 import OffsetManager;
 import SigManager;
 import TexturePtr;
-import Math;
+import Paul;
 
 export namespace cg {
     export class ImageBuffer {

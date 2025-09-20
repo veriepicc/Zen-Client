@@ -20,7 +20,7 @@ import MaterialPtr;
 import ScreenContext;
 import HashedString;
 import Tesselator;
-import Math;
+import Paul;
 import TexturePtr;
 import Color;
 import BedrockTextureData;
@@ -36,7 +36,7 @@ import Global;
 namespace Hooks::Render::SetupAndRender
 {
     using SetupAndRenderFunction = void(*)(void*, MinecraftUIRenderContext*);
-    using DrawImageFunction = void(*)(MinecraftUIRenderContext*, BedrockTextureData*, Math::Vec2<float>*, Math::Vec2<float>*, Math::Vec2<float>*, Math::Vec2<float>*, bool);
+    using DrawImageFunction = void(*)(MinecraftUIRenderContext*, BedrockTextureData*, Paul::Vec2<float>*, Paul::Vec2<float>*, Paul::Vec2<float>*, Paul::Vec2<float>*, bool);
 
     struct State
     {
@@ -49,10 +49,10 @@ namespace Hooks::Render::SetupAndRender
 
     inline void DrawImageDetour(MinecraftUIRenderContext* ctx,
                                 BedrockTextureData* tex,
-                                Math::Vec2<float>* pos,
-                                Math::Vec2<float>* size,
-                                Math::Vec2<float>* uvPos,
-                                Math::Vec2<float>* uvSize,
+                                Paul::Vec2<float>* pos,
+                                Paul::Vec2<float>* size,
+                                Paul::Vec2<float>* uvPos,
+                                Paul::Vec2<float>* uvSize,
                                 bool flag)
     {
         // First image draw of the frame: submit our ImGui pass so it appears underneath game UI

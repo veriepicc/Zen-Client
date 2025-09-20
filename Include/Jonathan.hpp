@@ -48,9 +48,9 @@
 
 #ifndef JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE
 #  if defined(_M_X64) || defined(__x86_64__)
-#    define JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE 64
+#    define JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE 128
 #  else
-#    define JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE 32
+#    define JONATHAN_CFG_TRAMPOLINE_SLOT_SIZE 64
 #  endif
 #endif
 
@@ -416,7 +416,17 @@ struct redirect_plan {
     size_t u_pos = 0;
     td->n_ip = 0;
 
-    const size_t needed = config::absJmpSize;
+    // Minimum bytes required to place a hook at target: prefer 5-byte rel32 if in range; else 14-byte abs jmp
+    size_t needed = 0;
+#if defined(_M_X64) || defined(__x86_64__)
+    {
+        // Try to see if detour is reachable with a rel32 from (target+5)
+        intptr_t rel = (intptr_t)td->detour - ((intptr_t)td->target + 5);
+        needed = (rel >= INT32_MIN && rel <= INT32_MAX) ? config::relJmpSize : config::absJmpSize;
+    }
+#else
+    needed = config::relJmpSize;
+#endif
 
     // copy until we have enough bytes to place the hook
     while (copied < needed) {
@@ -522,8 +532,8 @@ struct detour_node {
     void* detour;
     void* relay;
     void* tramp;
-    uint8_t backup[16];
-    uint8_t patch[16];
+    uint8_t backup[32];
+    uint8_t patch[32];
     uint8_t backed_len;
     uint8_t patch_len;
     uint8_t enabled;
@@ -755,11 +765,18 @@ inline JN_FORCEINLINE status activate_patch(uint32_t pos, bool enable) noexcept 
     // backup original bytes to be overwritten by hook
 #if defined(_M_X64) || defined(__x86_64__)
     size_t patch_len = 0;
-    if (emit::jmp_auto(h->patch, (uint8_t*)target + 5, detour)) patch_len = 5; else patch_len = 14;
+    // Prefer 5-byte rel32 if possible
+    intptr_t rel_try = (intptr_t)detour - ((intptr_t)target + 5);
+    if (rel_try >= INT32_MIN && rel_try <= INT32_MAX) {
+        emit::jmp_rel32(h->patch, (int32_t)rel_try); patch_len = 5;
+    } else {
+        emit::jmp_abs64(h->patch, detour); patch_len = 14;
+    }
 #else
     size_t patch_len = 5; emit::jmp_rel32(h->patch, (intptr_t)detour - ((intptr_t)target + 5));
 #endif
     size_t backed = 0; size_t pos = 0;
+    // copy enough instructions to cover patch_len, align to instruction boundaries
     while (backed < patch_len) {
         insn_info ii{}; size_t l = decode_length_x86_64((const uint8_t*)target + pos, &ii);
         if (!l) { leave_spin(); return status::unsupported_function; }

@@ -2,7 +2,7 @@ module;
 
 export module Tesselator;
 
-import Math;
+import Paul;
 import SigManager;
 import PrimitiveMode;
 import Memory;
@@ -30,9 +30,9 @@ public:
         Memory::CallFunc<void, void*, float, float, float, float>(target, this, r, g, b, a);
     }
 
-    void setRotation(float angle, Math::Vec3<float> pivot) {
+    void setRotation(float angle, Paul::Vec3<float> pivot) {
         void* target = SigManager::Tessellator_setRotation;
-        Memory::CallFunc<void, void*, float, Math::Vec3<float>>(target, this, angle, pivot);
+        Memory::CallFunc<void, void*, float, Paul::Vec3<float>>(target, this, angle, pivot);
     }
 
     void resetTransform(bool a1) {

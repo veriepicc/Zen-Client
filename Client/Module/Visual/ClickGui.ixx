@@ -1,6 +1,4 @@
 module;
-#include <glm/glm.hpp>
-#include <glm/ext/matrix_transform.hpp>
 #include <string>
 #include <iostream>
 #include <cstring>
@@ -24,7 +22,7 @@ import Tesselator;
 import MaterialPtr;
 import HashedString;
 import PrimitiveMode;
-import Math;
+import Paul;
 import MeshHelpers;
 import Global;
 import Memory;
@@ -90,13 +88,13 @@ public:
         static int logEvery = 0;
 		bool outline = true;
 
-		auto pos = Math::Vec3<float>(295.f, -59.f, 93.f);
-		auto upper = Math::Vec3<float>(pos.x + 1.f, pos.y + 1.f, pos.z + 1.f);
-		auto lower = Math::Vec3<float>(pos.x - 1.f, pos.y - 1.f, pos.z - 1.f);
+		auto pos = Paul::Vec3<float>(295.f, -59.f, 93.f);
+		auto upper = Paul::Vec3<float>(pos.x + 1.f, pos.y + 1.f, pos.z + 1.f);
+		auto lower = Paul::Vec3<float>(pos.x - 1.f, pos.y - 1.f, pos.z - 1.f);
 
-		Math::Vec3<float> diff = Math::Vec3<float>(upper.x - lower.x, upper.y - lower.y, upper.z - lower.z); //upper.sub(lower);
-		Math::Vec3<float> newLower = Math::Vec3<float>(lower.x - cam.x, lower.y - cam.y, lower.z - cam.z);
-		Math::Vec3<float> vertices[8] = {
+		Paul::Vec3<float> diff = Paul::Vec3<float>(upper.x - lower.x, upper.y - lower.y, upper.z - lower.z); //upper.sub(lower);
+		Paul::Vec3<float> newLower = Paul::Vec3<float>(lower.x - cam.x, lower.y - cam.y, lower.z - cam.z);
+		Paul::Vec3<float> vertices[8] = {
 			{newLower.x, newLower.y, newLower.z},
 			{newLower.x + diff.x, newLower.y, newLower.z},
 			{newLower.x, newLower.y, newLower.z + diff.z},
@@ -106,12 +104,17 @@ public:
 			{newLower.x + diff.x, newLower.y + diff.y, newLower.z},
 			{newLower.x, newLower.y + diff.y, newLower.z + diff.z},
 			{newLower.x + diff.x, newLower.y + diff.y, newLower.z + diff.z} };
-		// Scale vertices using glm
-		glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.f), 0.f, glm::vec3(1.0f, 1.0f, 1.0f));
-		Math::Vec3<float> newLowerReal = Math::Vec3<float>(newLower.x + 0.5f, newLower.y + 0.5f, newLower.z + 0.5f);//newLower.add(0.5f, 0.5f, 0.5f);  // .add(0.4375f, 0.4375f, 0.4375f) is chest
+		// Transform vertices using Paul
+		Paul::Mat4 rotationMatrix = Paul::Mat4::Identity();
+		Paul::Vec3<float> newLowerReal = Paul::Vec3<float>(newLower.x + 0.5f, newLower.y + 0.5f, newLower.z + 0.5f);
 		for (int i = 0; i < 8; i++) {
-			glm::vec4 rotatedVertex = rotationMatrix * glm::vec4(vertices[i].x - newLowerReal.x, vertices[i].y - newLowerReal.y, vertices[i].z - newLowerReal.z, 0.0f);
-			vertices[i] = Math::Vec3{ rotatedVertex.x + newLowerReal.x, rotatedVertex.y + newLowerReal.y, rotatedVertex.z + newLowerReal.z };
+			Paul::Vec4f rotatedVertex4 = rotationMatrix.multiply(Paul::Vec4f(
+				vertices[i].x - newLowerReal.x,
+				vertices[i].y - newLowerReal.y,
+				vertices[i].z - newLowerReal.z,
+				0.0f
+			));
+			vertices[i] = Paul::Vec3<float>{ rotatedVertex4.x + newLowerReal.x, rotatedVertex4.y + newLowerReal.y, rotatedVertex4.z + newLowerReal.z };
 		}
 
 		tess->begin(mce::PrimitiveMode::QuadList);
