@@ -12,7 +12,7 @@ using DisplayClientMessageFunction = void(*)(GuiData* guidata, std::optional<std
 DisplayClientMessageFunction originalFunction = nullptr;
 
 void LevelRenderer_DisplayClientMessage(GuiData* guidata, std::optional<std::string> message, bool c) {
-    std::cout << "hi";
+    std::cout << message.value();
 
     static bool loggedOnce = false;
     static int frameCounter = 0;
