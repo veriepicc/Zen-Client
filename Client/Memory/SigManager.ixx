@@ -91,6 +91,12 @@ public:
                  SigType::Sig,
                  0)
 
+    // GuiData
+    REGISTER_SIG(GuiData_DisplayClientMessage,
+                 "40 55 53 56 57 41 56 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 ? ? ? ? 41 0F B6 ? 49 8B D8",
+                 SigType::Sig,
+                 0)
+
     // Tessellator signatures
     REGISTER_SIG(Tessellator_begin_a,
                  "40 53 55 48 83 EC 28 80 B9",

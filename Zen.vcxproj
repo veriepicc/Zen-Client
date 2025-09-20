@@ -201,7 +201,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Client\dllmain.ixx">
+    <ClCompile Include="Client\Command\Command.ixx" />
+    <ClCompile Include="Client\Command\Commands\Toggle.ixx" />
+    <ClCompile Include="Client\Entry.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
       <AdditionalOptions>/ifcSearchDir "$(IntDir)." /ifcSearchDir "$(OutDir)." %(AdditionalOptions)</AdditionalOptions>
@@ -211,6 +213,7 @@
     <ClCompile Include="Client\Memory\Hooks\Block\GetDefaultBlockState.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Other\MinecraftGameUpdate.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Render\BaseLightTexture.ixx" />
+    <ClCompile Include="Client\Memory\Hooks\Render\DisplayClientMessage.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Render\RenderLevel.ixx" />
     <ClCompile Include="Client\Module\Misc\Uninject.ixx" />
     <ClCompile Include="Client\SDK\Block\BlockSource.ixx" />
@@ -392,12 +395,10 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    
   </Target>
 </Project>

@@ -4,12 +4,8 @@ module;
 
 export module BaseLightTexture;
 
-import Memory;
 import HookManager;
 import SigManager;
-import OffsetManager;
-import LevelRenderer;
-import ScreenContext;
 
 class BaseLightData {
 public:

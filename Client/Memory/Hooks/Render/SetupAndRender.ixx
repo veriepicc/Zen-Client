@@ -1,18 +1,12 @@
 module;
-#include <cstdint>
 #include <iostream>
 #include <string>
-#include <memory>
 #include "imgui/imgui.h"
 
 export module SetupAndRender;
 
-import HookManager;
 import SigManager;
-import Memory;
 import MinecraftUIRenderContext;
-import PrimitiveMode;
-import OffsetManager;
 import HookManager;
 
 import MeshHelpers;
