@@ -96,6 +96,7 @@ export namespace Zen
         auto tAfterHooks = std::chrono::high_resolution_clock::now();
         auto& hm = GetHookManager();
         hm.enableAll();
+        hm.logStatus();
         GetSoundPlayer().initialize();
 
         auto tAfterEnable = std::chrono::high_resolution_clock::now();

@@ -49,19 +49,15 @@ public:
 
         if (targets.count(target) != 0)
         {
-            std::cout << "[Hook] Create skipped (already created) target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << std::endl;
             return true;
         }
 
         const auto st_create = Jonathan::create_hook(target, reinterpret_cast<void*>(detour), reinterpret_cast<void**>(original));
         if (st_create != Jonathan::status::ok)
         {
-            std::cout << "[Hook] CreateHook failed target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec
-                      << " reason=" << Jonathan::status_to_string(st_create) << std::endl;
             return false;
         }
         targets.insert(target);
-        std::cout << "[Hook] Created target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << std::endl;
         return true;
     }
 
@@ -72,18 +68,14 @@ public:
         if (!ensureInitialized()) return false;
         if (targets.count(target) != 0)
         {
-            std::cout << "[Hook] Create skipped (already created) target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << std::endl;
             return true;
         }
         const auto st_create = Jonathan::create_hook(target, detour, original);
         if (st_create != Jonathan::status::ok)
         {
-            std::cout << "[Hook] CreateHook failed target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec
-                      << " reason=" << Jonathan::status_to_string(st_create) << std::endl;
             return false;
         }
         targets.insert(target);
-        std::cout << "[Hook] Created target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << std::endl;
         return true;
     }
 
@@ -93,8 +85,7 @@ public:
         if (!ensureInitialized()) return false;
         const auto st = Jonathan::enable_hook(nullptr);
         const bool ok = (st == Jonathan::status::ok);
-        std::cout << "[Hook] EnableAll " << (ok ? "ok" : "failed")
-                  << (ok ? "" : std::string(" reason=") + Jonathan::status_to_string(st)) << std::endl;
+        if (ok) std::cout << "[Hooks] All enabled" << std::endl;
         return ok;
     }
 
@@ -103,7 +94,7 @@ public:
         std::scoped_lock lock(mutex);
         if (!initialized) return true;
         const bool ok = (Jonathan::disable_hook(nullptr) == Jonathan::status::ok);
-        std::cout << "[Hook] DisableAll " << (ok ? "ok" : "failed") << std::endl;
+        if (ok) std::cout << "[Hooks] All disabled" << std::endl;
         return ok;
     }
 
@@ -113,8 +104,6 @@ public:
         if (!ensureInitialized()) return false;
         const auto st = Jonathan::enable_hook(target);
         const bool ok = (st == Jonathan::status::ok);
-        std::cout << "[Hook] Enable target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec
-                  << (ok ? " ok" : std::string(" failed reason=") + Jonathan::status_to_string(st)) << std::endl;
         return ok;
     }
 
@@ -123,7 +112,6 @@ public:
         std::scoped_lock lock(mutex);
         if (!initialized) return true;
         const bool ok = (Jonathan::disable_hook(target) == Jonathan::status::ok);
-        std::cout << "[Hook] Disable target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << (ok ? " ok" : " failed") << std::endl;
         return ok;
     }
 
@@ -133,7 +121,6 @@ public:
         if (!initialized) return true;
         const bool ok = (Jonathan::remove_hook(target) == Jonathan::status::ok);
         if (ok) targets.erase(target);
-        std::cout << "[Hook] Remove target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << (ok ? " ok" : " failed") << std::endl;
         return ok;
     }
 
@@ -145,7 +132,7 @@ public:
         for (auto* h : targets)
             ok = ok && (Jonathan::remove_hook(h) == Jonathan::status::ok);
         targets.clear();
-        std::cout << "[Hook] RemoveAll " << (ok ? "ok" : "failed") << std::endl;
+        if (ok) std::cout << "[Hooks] All removed" << std::endl;
         return ok;
     }
 
@@ -155,22 +142,18 @@ public:
     {
         const bool created = create(target, detour, original);
         const bool enabled = created && enable(target);
-        std::cout << "[Hook] Hook target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec
-                  << " created=" << (created ? "1" : "0") << " enabled=" << (enabled ? "1" : "0") << std::endl;
         return created && enabled;
     }
 
     void registerHook(std::unique_ptr<FuncHook> funcHook)
     {
         ownedHooks.emplace_back(std::move(funcHook));
-        std::cout << "[Hook] Registered hook object" << std::endl;
     }
 
     void activateHooks()
     {
         for (const auto& hookObj : ownedHooks)
         {
-            std::cout << "[Hook] Initializing hook object" << std::endl;
             hookObj->Initialize();
         }
         // Self-registering hooks will install themselves via HookRegistry
@@ -181,8 +164,7 @@ public:
 
     void logStatus() const
     {
-        std::cout << "[Hook] status: ownedHooks=" << ownedHooks.size()
-                  << " targets=" << targets.size() << std::endl;
+        std::cout << "[Hooks] Status: " << targets.size() << " active hooks" << std::endl;
     }
 
 private:
@@ -192,11 +174,11 @@ private:
         if (Jonathan::init() == Jonathan::status::ok)
         {
             initialized = true;
-            std::cout << "[Hook] Jonathan initialized" << std::endl;
+            std::cout << "[Hooks] Initialized" << std::endl;
         }
         else
         {
-            std::cout << "[Hook] Jonathan initialization failed" << std::endl;
+            std::cout << "[Hooks] Initialization failed" << std::endl;
         }
         return initialized;
     }
@@ -261,7 +243,6 @@ export namespace HookManagerAPI
     inline void Register(void** original, void* detour, void* target)
     {
         HookInternal::g_hooks.push_back(HookInfo{ original, detour, target });
-        std::cout << "[HookAPI] Registered target=0x" << std::hex << reinterpret_cast<std::uintptr_t>(target) << std::dec << std::endl;
     }
 
     inline bool InitializeHooks()
@@ -285,7 +266,7 @@ export namespace HookManagerAPI
             hm.remove(h.target);
         }
         HookInternal::g_hooks.clear();
-        std::cout << "[HookAPI] Shutdown complete" << std::endl;
+        std::cout << "[Hooks] Shutdown complete" << std::endl;
     }
 }
 

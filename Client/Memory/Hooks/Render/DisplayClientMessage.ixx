@@ -12,18 +12,8 @@ using DisplayClientMessageFunction = void(*)(GuiData*, const std::string&, std::
 DisplayClientMessageFunction originalFunction = nullptr;
 
 void GuiData_DisplayClientMessage(GuiData* guidata, const std::string& message, std::optional<std::string> a, bool b) {
-    static bool loggedOnce = false;
     if (originalFunction)
         originalFunction(guidata, message, a, b);
-
-    if (guidata)
-    {
-        if (!loggedOnce)
-        {
-            std::cout << "[DisplayClientMessage] first call ok gd=" << guidata << std::endl;
-            loggedOnce = true;
-        }
-    }
 }
 
 export namespace Hooks::Render::DisplayClientMessage {
@@ -32,7 +22,6 @@ export namespace Hooks::Render::DisplayClientMessage {
         void* target = SigManager::GuiData_DisplayClientMessage;
         if (!target)
         {
-            std::cout << "[DisplayClientMessage] signature not resolved" << std::endl;
             return false;
         }
 
@@ -42,7 +31,6 @@ export namespace Hooks::Render::DisplayClientMessage {
             GuiData_DisplayClientMessage,
             &originalFunction
         );
-        if (ok) std::cout << "[DisplayClientMessage] hook installed" << std::endl;
         return ok;
     }
 }

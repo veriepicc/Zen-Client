@@ -12,18 +12,8 @@ using SendToServerFunction = void(*)(PacketSender* sender, Packet* packet);
 SendToServerFunction originalFunction = nullptr;
 
 void PacketSender_SendToServer(PacketSender* sender, Packet* packet) {
-    static bool loggedOnce = false;
     if (originalFunction)
         originalFunction(sender, packet);
-
-    if (sender)
-    {
-        if (!loggedOnce)
-        {
-            std::cout << "[SendToServer] first call ok ps=" << sender << std::endl;
-            loggedOnce = true;
-        }
-    }
 }
 
 export namespace Hooks::Network::SendToServer {
@@ -32,7 +22,6 @@ export namespace Hooks::Network::SendToServer {
         void* target = SigManager::PacketSender_SendToServer;
         if (!target)
         {
-            std::cout << "[SendToServer] signature not resolved" << std::endl;
             return false;
         }
 
@@ -42,7 +31,6 @@ export namespace Hooks::Network::SendToServer {
             PacketSender_SendToServer,
             &originalFunction
         );
-        if (ok) std::cout << "[SendToServer] hook installed" << std::endl;
         return ok;
     }
 }

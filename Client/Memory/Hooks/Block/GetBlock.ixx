@@ -25,13 +25,10 @@ export namespace Hooks::Block::GetBlock
         void* target = SigManager::BlockTessellatorCache_getBlock;
         if (!target)
         {
-            std::cout << "[GetBlock] signature not resolved" << std::endl;
             return false;
         }
         auto& hookManager = GetHookManager();
-        bool ok = hookManager.hook<GetBlockFunction>(target, BlockTessCache_GetBlock, &originalFunction);
-        if (ok) std::cout << "[GetBlock] hook installed" << std::endl;
-        return ok;
+        return hookManager.hook<GetBlockFunction>(target, BlockTessCache_GetBlock, &originalFunction);
     }
 }
 

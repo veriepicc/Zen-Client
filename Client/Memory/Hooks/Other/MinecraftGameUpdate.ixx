@@ -23,7 +23,6 @@ namespace Hooks::Other::MinecraftGameUpdate
         void* target = SigManager::MinecraftGame_update;
         if (!target)
         {
-            std::cout << "[MinecraftGameUpdate] signature not resolved" << std::endl;
             return false;
         }
 
@@ -33,7 +32,6 @@ namespace Hooks::Other::MinecraftGameUpdate
             Detour,
             &originalFunction
         );
-        if (ok) std::cout << "[MinecraftGameUpdate] hook installed" << std::endl;
         return ok;
     }
 }

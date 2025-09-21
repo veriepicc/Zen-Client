@@ -23,13 +23,10 @@ export namespace Hooks::Block::GetDefaultBlockState
         void* target = SigManager::BlockTypeRegistry_getDefaultBlockState;
         if (!target)
         {
-            std::cout << "[GetDefaultBlockState] signature not resolved" << std::endl;
             return false;
         }
         auto& hookManager = GetHookManager();
-        bool ok = hookManager.hook<GetDefaultBlockStateFunction>(target, Detour, &originalFunction);
-        if (ok) std::cout << "[GetDefaultBlockState] hook installed" << std::endl;
-        return ok;
+        return hookManager.hook<GetDefaultBlockStateFunction>(target, Detour, &originalFunction);
     }
 }
 

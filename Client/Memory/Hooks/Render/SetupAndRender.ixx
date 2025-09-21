@@ -162,7 +162,6 @@ export namespace Hooks::Render::SetupAndRender
         void* target = SigManager::Setupandrender;
         if (!target)
         {
-            std::cout << "[SetupAndRender] signature not resolved" << std::endl;
             return false;
         }
 
