@@ -20,7 +20,6 @@ void PacketSender_SendToServer(PacketSender* sender, Packet* packet) {
     {
         if (!loggedOnce)
         {
-			std::cout << static_cast<uint8_t>(packet->getID()) << std::endl;
             std::cout << "[SendToServer] first call ok ps=" << sender << std::endl;
             loggedOnce = true;
         }

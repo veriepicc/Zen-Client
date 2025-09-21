@@ -12,8 +12,6 @@ using DisplayClientMessageFunction = void(*)(GuiData*, const std::string&, std::
 DisplayClientMessageFunction originalFunction = nullptr;
 
 void GuiData_DisplayClientMessage(GuiData* guidata, const std::string& message, std::optional<std::string> a, bool b) {
-    std::cout << message;
-
     static bool loggedOnce = false;
     if (originalFunction)
         originalFunction(guidata, message, a, b);

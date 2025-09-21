@@ -93,7 +93,7 @@ public:
 
     // Network
    REGISTER_SIG(PacketSender_SendToServer,
-                 "0 ?",
+                 "48 83 EC ? 48 0F BE ? ? 48 83 C0 ? 74 27",
                  SigType::Sig,
                  0)
 
