@@ -211,6 +211,7 @@
     <ClCompile Include="Client\Memory\Global.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Block\GetBlock.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Block\GetDefaultBlockState.ixx" />
+    <ClCompile Include="Client\Memory\Hooks\Network\PacketSender.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Other\MinecraftGameUpdate.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Render\BaseLightTexture.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Render\DisplayClientMessage.ixx" />
@@ -218,6 +219,7 @@
     <ClCompile Include="Client\Module\Misc\Uninject.ixx" />
     <ClCompile Include="Client\SDK\Block\BlockSource.ixx" />
     <ClCompile Include="Client\SDK\ClientInstance.ixx" />
+    <ClCompile Include="Client\SDK\Network\Packet.ixx" />
     <ClCompile Include="Client\SDK\Render\HashedString.ixx">
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>

@@ -91,9 +91,15 @@ public:
                  SigType::Sig,
                  0)
 
+    // Network
+   REGISTER_SIG(PacketSender_SendToServer,
+                 "0 ?",
+                 SigType::Sig,
+                 0)
+
     // GuiData
     REGISTER_SIG(GuiData_DisplayClientMessage,
-                 "40 55 53 56 57 41 56 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 ? ? ? ? 41 0F B6 ? 49 8B D8",
+                 "40 55 53 56 57 41 56 48 8D AC 24 A0 FE FF FF 48 81 EC 60 02 00 00 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 50 01 00 00 41",
                  SigType::Sig,
                  0)
 

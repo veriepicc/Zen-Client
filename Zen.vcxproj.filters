@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Client\dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Client\Zen.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -60,7 +57,6 @@
     <ClCompile Include="Client\SDK\Render\MinecraftUIRenderContext.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    
     <ClCompile Include="Client\SDK\Render\HashedString.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -176,6 +172,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Client\Module\Misc\Uninject.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Command\Command.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Command\Commands\Toggle.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Entry.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\Hooks\Render\DisplayClientMessage.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\SDK\Network\Packet.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Memory\Hooks\Network\PacketSender.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

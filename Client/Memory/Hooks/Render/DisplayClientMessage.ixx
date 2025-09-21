@@ -15,7 +15,6 @@ void GuiData_DisplayClientMessage(GuiData* guidata, const std::string& message, 
     std::cout << message;
 
     static bool loggedOnce = false;
-    static int frameCounter = 0;
     if (originalFunction)
         originalFunction(guidata, message, a, b);
 
