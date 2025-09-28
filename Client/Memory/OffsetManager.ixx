@@ -31,4 +31,6 @@ export namespace Offsets
 
     Offset(LevelRenderer_LevelRendererPlayer, 0x3F0)
     Offset(LevelRendererPlayer_cameraPos, 0x664)
+
+    Offset(BlockTypeRegistry_mBlockLookupMap_global, 0x8D57F38)
 }

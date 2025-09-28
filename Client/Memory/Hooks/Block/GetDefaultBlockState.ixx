@@ -8,12 +8,14 @@ import HookManager;
 import SigManager;
 import HashedString;
 
-using GetDefaultBlockStateFunction = void*(*)(void* /*registry*/, const HashedString* /*name*/, int /*a2*/);
+using GetDefaultBlockStateFunction = void*(*)(void* /*registry*/, const HashedString* /*name*/);
 static GetDefaultBlockStateFunction originalFunction = nullptr;
 
-void* Detour(void* self, const HashedString* name, int a2)
+//const struct Block * BlockTypeRegistry::getDefaultBlockState(void* lookupMap, const struct HashedString* hashedName)
+//lookupMap = base + BlockTypeRegistry_mBlockLookupMap_global
+void* Detour(void* self, const HashedString* name)
 {
-    return originalFunction(self, name, a2);
+    return originalFunction(self, name);
 }
 
 export namespace Hooks::Block::GetDefaultBlockState
