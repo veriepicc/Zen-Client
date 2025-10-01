@@ -57,4 +57,7 @@ export namespace Utils {
     void DownloadFile(std::string url, std::string path) {
         URLDownloadToFileA(nullptr, url.c_str(), path.c_str(), 0, NULL);
     }
+    __int64 getBase() {
+        return reinterpret_cast<__int64>(GetModuleHandleA(NULL));
+	}
 }

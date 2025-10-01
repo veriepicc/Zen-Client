@@ -6,6 +6,8 @@ module;
 export module HashedString;
 import SDK;
 
+class Block;
+
 export class HashedString {
 public:
     std::uint64_t hash{};
@@ -45,4 +47,5 @@ public:
         return std::strcmp(text.c_str(), rhs.text.c_str()) < 0;
     }
 };
+
 static SDK::CoreRegistration Register{"HashedString"};
