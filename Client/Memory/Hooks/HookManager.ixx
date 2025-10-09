@@ -17,6 +17,7 @@ module;
 
 export module HookManager;
 import SigManager;
+import Utils;
 
 export class HookManager
 {
@@ -219,9 +220,24 @@ export namespace HookRegistry
 
     inline bool InitializeAll()
     {
+        FILE* logFile = nullptr;
+        std::string logPath = Utils::GetRoamingPath() + "\\zen_log.txt";
+        fopen_s(&logFile, logPath.c_str(), "a");
+        
+        if (logFile) {
+            fprintf(logFile, "[HookRegistry] Initializing %zu hooks...\n", HookRegistryInternal::List().size());
+            fflush(logFile);
+        }
+        
         bool ok = true;
         for (auto fn : HookRegistryInternal::List())
             ok = fn() && ok;
+            
+        if (logFile) {
+            fprintf(logFile, "[HookRegistry] Hook initialization %s\n", (ok ? "succeeded" : "failed"));
+            fflush(logFile);
+        }
+        
         return ok;
     }
 

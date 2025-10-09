@@ -47,10 +47,24 @@ export namespace Utils {
         std::string path;
         wchar_t* env;
         size_t size;
-        if (!_wdupenv_s(&env, &size, L"localappdata") && env && path.empty()) {
-            std::wstring wstr = std::wstring(env).substr(0, lstrlenW(env) - 2) + L"RoamingState";
+        if (!_wdupenv_s(&env, &size, L"localappdata") && env) {
+            std::wstring localAppData = env;
             delete env;
-            path = std::filesystem::path(wstr).string();
+            
+            std::wstring packagesPath = localAppData + L"\\Packages";
+            std::wstring educationPath = packagesPath + L"\\Microsoft.MinecraftEducationEdition_8wekyb3d8bbwe\\RoamingState";
+            
+            if (std::filesystem::exists(educationPath)) {
+                path = std::filesystem::path(educationPath).string();
+            } else {
+                std::wstring bedrockPath = packagesPath + L"\\Microsoft.MinecraftUWP_8wekyb3d8bbwe\\RoamingState";
+                if (std::filesystem::exists(bedrockPath)) {
+                    path = std::filesystem::path(bedrockPath).string();
+                } else {
+                    std::wstring fallbackPath = localAppData + L"\\RoamingState";
+                    path = std::filesystem::path(fallbackPath).string();
+                }
+            }
         }
         return path;
     }

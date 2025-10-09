@@ -2,6 +2,7 @@ module;
 #include <iostream>
 #include <string>
 #include "imgui/imgui.h"
+#include "imgui/imgui_internal.h"
 
 export module SetupAndRender;
 
@@ -49,7 +50,6 @@ namespace Hooks::Render::SetupAndRender
                                 Paul::Vec2<float>* uvSize,
                                 bool flag)
     {
-        // First image draw of the frame: submit our ImGui pass so it appears underneath game UI
         if (!State::drewOnceThisFrame)
         {
             ImGui_ImplBigRat::NewFrame(1.0f / 60.0f, 0.0f, 0.0f, 1.0f, 1.0f);
@@ -107,7 +107,22 @@ namespace Hooks::Render::SetupAndRender
         }
 		if (!Global::getClientInstance()) Global::setClientInstance(renderContext->getClientInstance());
 
+        static bool imguiInit = false;
+        if (!imguiInit)
+        {
+            ImGui_ImplBigRat::Init(renderContext);
+            imguiInit = true;
+        }
+
         State::drewOnceThisFrame = false;
+        
+        if (ImGui::GetCurrentContext())
+        {
+            if (ImGui::GetCurrentContext()->WithinFrameScope)
+            {
+                ImGui::EndFrame();
+            }
+        }
 
         // Texture bootstrap for Mart image once
         if (!State::imageInitialized)
@@ -130,22 +145,12 @@ namespace Hooks::Render::SetupAndRender
                 State::imageInitialized = State::imageTexture.clientTexture != nullptr;
             }
         }
-        //
-        // Install drawImage vfunc hook once so we can inject before other UI draws
         if (!State::originalDrawImage)
         {
             void** vtable = *reinterpret_cast<void***>(renderContext);
             void* target = vtable[7];
             auto& hookManager = GetHookManager();
             hookManager.hook<DrawImageFunction>(target, DrawImageDetour, &State::originalDrawImage);
-        }
-
-        // Initialize ImGui backend once
-        static bool imguiInit = false;
-        if (!imguiInit)
-        {
-            ImGui_ImplBigRat::Init(renderContext);
-            imguiInit = true;
         }
 
         // ImGui rendering is executed in DrawImageDetour on first image draw each frame

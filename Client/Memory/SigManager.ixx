@@ -38,8 +38,10 @@ private:
 public:
     static void initialize()
     {
+        std::cout << "[Sig] Initializing " << initializers.size() << " signatures..." << std::endl;
         for (const auto& init : initializers) init();
         Memory::ResolveSignatureQueue(sigs);
+        std::cout << "[Sig] Signature resolution complete" << std::endl;
     }
 
     static void deinitialize()
@@ -75,7 +77,7 @@ public:
                  SigType::Sig,
                  0)
     REGISTER_SIG(Setupandrender,
-                 "48 8B C4 48 89 ?? ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D A8 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 0F 29 70 ?? 0F 29 78 ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 ?? ?? ?? ?? 4C 8B FA 48 89 55",
+                 "48 8B C4 48 89 58 18 55 56 57 41 54 41 55 41 56 41 57 48 8D A8 98 FD",
                  SigType::Sig,
                  0)
     REGISTER_SIG(LevelRenderer_renderLevel,

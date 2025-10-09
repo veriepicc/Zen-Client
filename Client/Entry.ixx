@@ -12,8 +12,11 @@ export extern "C" BOOL APIENTRY DllMain(
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
+        OutputDebugStringA("[DllMain] DLL_PROCESS_ATTACH called\n");
         DisableThreadLibraryCalls(hModule);
+        OutputDebugStringA("[DllMain] About to call Zen::Initialize\n");
         Zen::Initialize(hModule);
+        OutputDebugStringA("[DllMain] Zen::Initialize completed\n");
         break;
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
