@@ -13,10 +13,13 @@ module;
 #include <span>
 #include <algorithm>
 #include <execution>
-
-#include <libhat/libhat.hpp>
+#include <cstring>
+#include <thread>
+#include <array>
 
 export module Memory;
+
+import Zenova;
 
 // Internal-only implementation details (not exported)
 namespace Memory::detail
@@ -26,7 +29,8 @@ namespace Memory::detail
     struct QueuedSignatureRequest
     {
         std::string name;
-        std::vector<hat::signature_element> pattern;
+        std::vector<Zenova::SigByte> pattern;
+        std::size_t firstNonWildcard;
         int relativeOffset;
         void** outPtr;
         SignatureKind kind;
@@ -36,7 +40,8 @@ namespace Memory::detail
     inline std::vector<QueuedSignatureRequest> queuedSignatureRequests;
 
     inline void enqueueSignature(std::string name,
-                                 std::vector<hat::signature_element> pattern,
+                                 std::vector<Zenova::SigByte> pattern,
+                                 std::size_t firstNonWildcard,
                                  int relativeOffset,
                                  void** outPtr,
                                  SignatureKind kind,
@@ -45,6 +50,7 @@ namespace Memory::detail
         queuedSignatureRequests.push_back(QueuedSignatureRequest{
             std::move(name),
             std::move(pattern),
+            firstNonWildcard,
             relativeOffset,
             outPtr,
             kind,
@@ -132,127 +138,127 @@ export namespace Memory
         std::vector<HookRecord> hooks;
     };
 
-    export inline HookRegistry& Hooks()
+    inline HookRegistry& Hooks()
     {
         static HookRegistry instance;
         return instance;
     }
 
-    export inline bool RegisterHook(void** original, void* detour, void* target)
+    inline bool RegisterHook(void** original, void* detour, void* target)
     {
         return Hooks().registerHook(original, detour, target);
     }
 
-    export inline bool InitializeHooking()
+    inline bool InitializeHooking()
     {
         return Hooks().applyAll();
     }
 
-    export inline void ShutdownHooking()
+    inline void ShutdownHooking()
     {
         Hooks().shutdown();
     }
 
-    export inline std::uintptr_t ScanSignature(std::span<const hat::signature_element> sig,
-                                               int relativeOffset = 0,
-                                               std::string_view section = ".text")
+    // Scan signature using Zenova (single scan, not batched)
+    template<std::size_t N>
+    inline std::uintptr_t ScanSignature(const Zenova::Signature<N>& sig,
+                                        int relativeOffset = 0,
+                                        std::string_view section = ".text")
     {
-        const auto mod = hat::process::get_process_module();
+        const auto mod = Zenova::process::getProcessModule();
+        if (!mod.valid()) return 0;
 
-        auto res = hat::find_pattern<hat::scan_alignment::X16>(sig, section, mod);
-        if (!res.has_result())
-            res = hat::find_pattern<hat::scan_alignment::X1>(sig, section, mod);
-        if (!res.has_result()) return 0;
+        auto sec = Zenova::process::getSection(mod, section);
+        if (!sec.valid()) return 0;
+
+        auto res = Zenova::scan(sec.data(), sig);
+        if (!res.valid()) return 0;
+
         return relativeOffset == 0
-            ? reinterpret_cast<std::uintptr_t>(res.get())
+            ? res.addr()
             : reinterpret_cast<std::uintptr_t>(res.rel(static_cast<size_t>(relativeOffset)));
     }
 
-    
     inline void EnqueueSignature(std::string name,
-                                 std::vector<hat::signature_element> pattern,
+                                 std::vector<Zenova::SigByte> pattern,
+                                 std::size_t firstNonWildcard,
                                  int relativeOffset,
                                  void** outPtr,
                                  SignatureKind kind,
                                  std::string section)
     {
-        detail::enqueueSignature(std::move(name), std::move(pattern), relativeOffset, outPtr, kind, std::move(section));
+        detail::enqueueSignature(std::move(name), std::move(pattern), firstNonWildcard, relativeOffset, outPtr, kind, std::move(section));
     }
 
-    
-    export inline void ResolveSignatureQueue(std::unordered_map<std::string, std::uintptr_t>& store)
+    // Process all queued signature requests with parallel AVX2 scanning + rarity-based anchors 🔥
+    inline void ResolveSignatureQueue(std::unordered_map<std::string, std::uintptr_t>& store)
     {
         if (detail::queuedSignatureRequests.empty()) return;
 
+        // Cache sections
+        std::unordered_map<std::string, Zenova::process::Section> secCache;
+        const auto mod = Zenova::process::getProcessModule();
         
-        std::unordered_map<std::string, std::span<std::byte>> sectionCache;
-        const auto mod = hat::process::get_process_module();
         for (const auto& q : detail::queuedSignatureRequests)
         {
-            if (sectionCache.find(q.section) == sectionCache.end())
+            if (secCache.find(q.section) == secCache.end())
             {
-                sectionCache.emplace(q.section, hat::process::get_section_data(mod, q.section));
+                secCache.emplace(q.section, Zenova::process::getSection(mod, q.section));
             }
         }
-
 
         const std::size_t count = detail::queuedSignatureRequests.size();
         std::vector<std::size_t> indices(count);
         for (std::size_t i = 0; i < count; ++i) indices[i] = i;
         std::vector<std::uintptr_t> results(count, 0);
 
-        
-        std::for_each(std::execution::par_unseq, indices.begin(), indices.end(), [&](std::size_t i)
+        // Parallel signature scanning - each signature uses AVX2 with rarity-based anchor!
+        std::for_each(std::execution::par_unseq, indices.begin(), indices.end(), [&secCache, &results](std::size_t i)
         {
             const auto& q = detail::queuedSignatureRequests[i];
-            const auto it = sectionCache.find(q.section);
-            if (it == sectionCache.end()) return;
-            const auto sec = it->second;
-            if (sec.empty()) return;
+            const auto it = secCache.find(q.section);
+            if (it == secCache.end()) return;
+            const auto& sec = it->second;
+            if (!sec.valid()) return;
 
-            auto res = hat::find_pattern<hat::scan_alignment::X16>(
-                sec.begin(),
-                sec.end(),
-                std::span<const hat::signature_element>{q.pattern},
-                hat::scan_hint::x86_64
+            const std::size_t sigLen = q.pattern.size();
+            if (sigLen == 0) return;
+
+            // Use Zenova's AVX2 scanner with rarity-based anchor selection! 🔥
+            const std::byte* found = Zenova::scanRuntime(
+                sec.data(),
+                std::span<const Zenova::SigByte>{q.pattern}
             );
 
-            if (!res.has_result())
-            {
-           
-                res = hat::find_pattern<hat::scan_alignment::X1>(
-                    sec.begin(),
-                    sec.end(),
-                    std::span<const hat::signature_element>{q.pattern},
-                    hat::scan_hint::x86_64
-                );
-                if (!res.has_result())
-                {
-                    results[i] = 0;
-                    return;
-                }
+            if (!found) {
+                results[i] = 0;
+                return;
             }
 
             if (q.kind == SignatureKind::Direct)
             {
                 if (q.relativeOffset == 0)
                 {
-                    results[i] = reinterpret_cast<std::uintptr_t>(res.get());
+                    results[i] = reinterpret_cast<std::uintptr_t>(found);
                 }
                 else
                 {
-                    results[i] = reinterpret_cast<std::uintptr_t>(res.rel(static_cast<size_t>(q.relativeOffset)));
+                    // Resolve RIP-relative
+                    const auto rip = found + q.relativeOffset + 4;
+                    std::int32_t rel32;
+                    std::memcpy(&rel32, found + q.relativeOffset, sizeof(rel32));
+                    results[i] = reinterpret_cast<std::uintptr_t>(rip + rel32);
                 }
             }
             else
             {
-                const auto base = reinterpret_cast<std::uintptr_t>(res.get());
+                const auto base = reinterpret_cast<std::uintptr_t>(found);
                 const auto ptrLocation = base + static_cast<std::uintptr_t>(q.relativeOffset);
                 results[i] = *reinterpret_cast<const std::uintptr_t*>(ptrLocation);
             }
         });
 
-
+        // Store results
         for (std::size_t i = 0; i < count; ++i)
         {
             const auto& q = detail::queuedSignatureRequests[i];
@@ -264,77 +270,46 @@ export namespace Memory
         detail::queuedSignatureRequests.clear();
     }
 
+    // Create initializer from Zenova signature (compile-time)
+    template <std::size_t N>
     inline std::function<void()> MakeSigInitializer(const char* name,
-                                                          std::span<const hat::signature_element> sig,
-                                                          int relativeOffset,
-                                                          void** outPtr,
-                                                          std::unordered_map<std::string, std::uintptr_t>& store,
-                                                          std::string_view section = ".text")
-    { 
-        std::string nameCopy(name);
-        std::vector<hat::signature_element> pattern(sig.begin(), sig.end());
-        return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), relativeOffset, outPtr, &store, section]() mutable {
-            (void)store; 
-            EnqueueSignature(std::move(nameCopy), std::move(pattern), relativeOffset, outPtr, SignatureKind::Direct, std::string(section));
-        };
-    }
-
-   
-    template <typename FixedSig>
-    inline std::function<void()> MakeSigInitializer(const char* name,
-                                                           const FixedSig& fixed,
-                                                           int relativeOffset,
-                                                           void** outPtr,
-                                                           std::unordered_map<std::string, std::uintptr_t>& store,
-                                                           std::string_view section = ".text")
+                                                    const Zenova::Signature<N>& sig,
+                                                    int relativeOffset,
+                                                    void** outPtr,
+                                                    std::unordered_map<std::string, std::uintptr_t>& store,
+                                                    std::string_view section = ".text")
     {
         std::string nameCopy(name);
-        std::vector<hat::signature_element> pattern(fixed.begin(), fixed.end());
-        return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), relativeOffset, outPtr, &store, section]() mutable {
-            (void)store; 
-            EnqueueSignature(std::move(nameCopy), std::move(pattern), relativeOffset, outPtr, SignatureKind::Direct, std::string(section));
+        std::vector<Zenova::SigByte> pattern(sig.begin(), sig.end());
+        std::size_t firstNonWildcard = sig.firstNonWildcard;
+        return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), firstNonWildcard, relativeOffset, outPtr, &store, section]() mutable {
+            (void)store;
+            EnqueueSignature(std::move(nameCopy), std::move(pattern), firstNonWildcard, relativeOffset, outPtr, SignatureKind::Direct, std::string(section));
         };
     }
 
-   
+    // Reference signature initializer (compile-time)
+    template <std::size_t N>
     inline std::function<void()> MakeRefSigInitializer(const char* name,
-                                                       std::span<const hat::signature_element> sig,
+                                                       const Zenova::Signature<N>& sig,
                                                        int relativeOffset,
                                                        void** outPtr,
                                                        std::unordered_map<std::string, std::uintptr_t>& store,
                                                        std::string_view section = ".text")
     {
         std::string nameCopy(name);
-        std::vector<hat::signature_element> pattern(sig.begin(), sig.end());
-        return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), relativeOffset, outPtr, &store, section]() mutable {
-            (void)store; 
-            EnqueueSignature(std::move(nameCopy), std::move(pattern), relativeOffset, outPtr, SignatureKind::Reference, std::string(section));
+        std::vector<Zenova::SigByte> pattern(sig.begin(), sig.end());
+        std::size_t firstNonWildcard = sig.firstNonWildcard;
+        return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), firstNonWildcard, relativeOffset, outPtr, &store, section]() mutable {
+            (void)store;
+            EnqueueSignature(std::move(nameCopy), std::move(pattern), firstNonWildcard, relativeOffset, outPtr, SignatureKind::Reference, std::string(section));
         };
     }
 
-   
-    template <typename FixedSig>
-    inline std::function<void()> MakeRefSigInitializer(const char* name,
-                                                       const FixedSig& fixed,
-                                                       int relativeOffset,
-                                                       void** outPtr,
-                                                       std::unordered_map<std::string, std::uintptr_t>& store,
-                                                       std::string_view section = ".text")
-    {
-        std::string nameCopy(name);
-        std::vector<hat::signature_element> pattern(fixed.begin(), fixed.end());
-        return [nameCopy = std::move(nameCopy), pattern = std::move(pattern), relativeOffset, outPtr, &store, section]() mutable {
-            (void)store; 
-            EnqueueSignature(std::move(nameCopy), std::move(pattern), relativeOffset, outPtr, SignatureKind::Reference, std::string(section));
-        };
-    }
-
-    
+    // Member access helper (replaces hat::member_at)
     template<typename MemberType, typename Base>
     inline auto& MemberAt(Base* ptr, std::size_t offset)
     {
-        return hat::member_at<MemberType>(ptr, offset);
+        return *reinterpret_cast<MemberType*>(reinterpret_cast<std::byte*>(ptr) + offset);
     }
 }
-
-

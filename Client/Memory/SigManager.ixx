@@ -8,14 +8,14 @@ module;
 #include <functional>
 #include <iostream>
 
-#include <libhat/libhat.hpp>
-
 export module SigManager;
 
 import Memory;
+import Zenova;
 
 export enum class SigType { Sig, ReferenceSig };
 
+// Compile-time signature registration macro using Zenova
 #define REGISTER_SIG(Name, Pattern, Type, Offset) \
 public: \
 static inline void* Name; \
@@ -23,8 +23,8 @@ private: \
 static inline std::function<void()> Name##Reg = ( \
     initializers.emplace_back( \
         (Type == SigType::Sig) \
-            ? Memory::MakeSigInitializer(#Name, hat::compile_signature<Pattern>(), Offset, &Name, sigs, ".text") \
-            : Memory::MakeRefSigInitializer(#Name, hat::compile_signature<Pattern>(), Offset, &Name, sigs, ".text") \
+            ? Memory::MakeSigInitializer(#Name, Zenova::parseSig(Pattern), Offset, &Name, sigs, ".text") \
+            : Memory::MakeRefSigInitializer(#Name, Zenova::parseSig(Pattern), Offset, &Name, sigs, ".text") \
     ), \
     std::function<void()>() \
 ); \
@@ -185,4 +185,3 @@ public:
                  SigType::Sig,
                  0)
 };
-
