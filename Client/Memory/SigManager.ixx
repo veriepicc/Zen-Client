@@ -15,7 +15,6 @@ import Zenova;
 
 export enum class SigType { Sig, ReferenceSig };
 
-// Compile-time signature registration macro using Zenova
 #define REGISTER_SIG(Name, Pattern, Type, Offset) \
 public: \
 static inline void* Name; \
@@ -91,19 +90,16 @@ public:
                  SigType::Sig,
                  0)
 
-    // Network
    REGISTER_SIG(PacketSender_SendToServer,
                  "48 83 EC ? 48 0F BE ? ? 48 83 C0 ? 74 27",
                  SigType::Sig,
                  0)
 
-    // GuiData
     REGISTER_SIG(GuiData_DisplayClientMessage,
                  "40 55 53 56 57 41 56 48 8D AC 24 A0 FE FF FF 48 81 EC 60 02 00 00 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 50 01 00 00 41",
                  SigType::Sig,
                  0)
 
-    // Tessellator signatures
     REGISTER_SIG(Tessellator_begin_a,
                  "40 53 55 48 83 EC 28 80 B9",
                  SigType::Sig,
@@ -138,34 +134,31 @@ public:
                  0)
 
     REGISTER_SIG(MeshHelper_renderMeshImmediately,
-                "40 ? 55 56 57 41 ? 48 81 EC ? ? ? ? 49 8B ? 4D 8B ? 48 8B ? 48 8B ? 80 BA 0D 02 00 00 ? 0F 85 ? ? ? ? 48 8D ? ? ? ? ? 48 89 ? ? ? 48 C7 44 24 58 ? ? ? ? 0F 28 ? ? ? 66 0F ? ? ? ? C7 44 24 20 ? ? ? ? 4C 8D ? ? ? 41 B8 ? ? ? ? 48 8D ? ? ? ? ? ? 48 8B ? E8 ? ? ? ? 48 8B ? C6 84 24 A0 00 00 00 ? 33 D2",
-                SigType::Sig,
-                0)
+                 "40 ? 55 56 57 41 ? 48 81 EC ? ? ? ? 49 8B ? 4D 8B ? 48 8B ? 48 8B ? 80 BA 0D 02 00 00 ? 0F 85 ? ? ? ? 48 8D ? ? ? ? ? 48 89 ? ? ? 48 C7 44 24 58 ? ? ? ? 0F 28 ? ? ? 66 0F ? ? ? ? C7 44 24 20 ? ? ? ? 4C 8D ? ? ? 41 B8 ? ? ? ? 48 8D ? ? ? ? ? ? 48 8B ? E8 ? ? ? ? 48 8B ? C6 84 24 A0 00 00 00 ? 33 D2",
+                 SigType::Sig,
+                 0)
 
-    // MeshHelpers::renderMeshImmediately2 (textured) - latest known cross-version signature
     REGISTER_SIG(MeshHelper_renderMeshImmediately2,
-                "40 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 98 FC FF FF 48 81 EC 68 04 00 00 49",
-                SigType::Sig,
-                0)
+                 "40 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 98 FC FF FF 48 81 EC 68 04 00 00 49",
+                 SigType::Sig,
+                 0)
 
     REGISTER_SIG(createMaterial,
-                "48 8B 05 ? ? ? ? 48 8D 55 90 48 8D 0D ? ? ? ? 48 8B 40 08 FF 15 ? ? ? ? 48 8B D8",
-                SigType::Sig,
-                0)
+                 "48 8B 05 ? ? ? ? 48 8D 55 90 48 8D 0D ? ? ? ? 48 8B 40 08 FF 15 ? ? ? ? 48 8B D8",
+                 SigType::Sig,
+                 0)
     REGISTER_SIG(BlockTessellatorCache_getBlock,
-                "48 89 ? ? ? 57 48 83 EC ? 48 8B ? 48 8B ? 48 8B ? 48 85 ? 75 ? 48 8D",
-                SigType::Sig,
-                0)
+                 "48 89 ? ? ? 57 48 83 EC ? 48 8B ? 48 8B ? 48 8B ? 48 85 ? 75 ? 48 8D",
+                 SigType::Sig,
+                 0)
     REGISTER_SIG(RenderChunkCoordinator_dirtyAll,
-                "48 89 ? ? ? 48 89 ? ? ? 48 89 ? ? ? 57 41 ? 41 ? 41 ? 41 ? 48 81 EC ? ? ? ? 48 8B ? ? ? ? ? 48 33 ? 48 89 ? ? ? ? ? ? 44 88",
-                SigType::Sig,
-                0)
-    // RenderMaterialGroup::ui
+                 "48 89 ? ? ? 48 89 ? ? ? 48 89 ? ? ? 57 41 ? 41 ? 41 ? 41 ? 48 81 EC ? ? ? ? 48 8B ? ? ? ? ? 48 33 ? 48 89 ? ? ? ? ? ? 44 88",
+                 SigType::Sig,
+                 0)
     REGISTER_SIG(RenderMaterialGroup_ui,
                  "48 8B 05 ? ? ? ? 48 8D 55 90 48 8D 0D ? ? ? ? 48 8B 40 08 FF 15 ? ? ? ? 48 8B D8",
                  SigType::Sig,
                  0)
-    // TextureGroup::uploadTexture(resource, cg::ImageBuffer) - version dependent
     REGISTER_SIG(TextureGroup_uploadTexture_imageBuffer,
                  "48 89 ? ? ? 55 56 57 41 ? 41 ? 48 8D ? ? ? 48 81 EC ? ? ? ? 48 8B ? ? ? ? ? 48 33 ? 48 89 ? ? 49 8B ? 48 8B ? 48 8B ? 4C 89 ? ? 48 8D",
                  SigType::Sig,
@@ -175,13 +168,27 @@ public:
                  SigType::Sig,
                  0)
 
-    // Input feed hooks
     REGISTER_SIG(Keyboard_feed,
                  "? ? ? ? ? ? ? 4C 8D 05 ? ? ? ? 89 54 24 20 88",
                  SigType::Sig,
                  0)
     REGISTER_SIG(MouseDevice_feed,
                  "? ? ? ? ? ? ? ? 89 68 ? 48 89 70 ? 57 41 54 41 55 41 56 41 57 48 83 EC ? 44 0F B7 BC 24 ? ? ? ? 48 8B D9",
+                 SigType::Sig,
+                 0)
+
+    REGISTER_SIG(tryGetMoveInputComponent,
+                 "48 89 5C 24 ? 57 48 83 EC 30 8B ? C8 25 2E CD 8B 46",
+                 SigType::Sig,
+                 0)
+
+    REGISTER_SIG(tryGetStateVectorComponent,
+                 "48 89 5C 24 ? 57 48 83 EC 30 8B ? C8 25 91 3C C9 0E",
+                 SigType::Sig,
+                 0)
+
+    REGISTER_SIG(ClientInstance_getLocalPlayerIndex,
+                 "49 8B 00 49 8B C8 48 8B 80 ? ? ? ? FF 15 ? ? ? ? 48 85 C0 0F 84 ? ? ? ? 0F",
                  SigType::Sig,
                  0)
 };

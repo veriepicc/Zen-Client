@@ -213,6 +213,10 @@
     <ClCompile Include="Client\Module\Misc\Uninject.ixx" />
     <ClCompile Include="Client\SDK\Block\BlockSource.ixx" />
     <ClCompile Include="Client\SDK\ClientInstance.ixx" />
+    <ClCompile Include="Client\SDK\Actor\Actor.ixx" />
+    <ClCompile Include="Client\SDK\Actor\LocalPlayer.ixx" />
+    <ClCompile Include="Client\SDK\Components\MoveInputComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\StateVectorComponent.ixx" />
     <ClCompile Include="Client\SDK\Network\Packet.ixx" />
     <ClCompile Include="Client\SDK\Render\HashedString.ixx">
       <PrimaryModuleInterface>true</PrimaryModuleInterface>

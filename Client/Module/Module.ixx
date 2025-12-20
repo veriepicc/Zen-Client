@@ -43,10 +43,6 @@ export inline constexpr std::string_view categoryName(Category category)
     }
 }
 
-// Export a minimal VK-style constant to avoid including Windows headers in modules
- 
-
-
 export struct Setting
 {
     std::string name;
@@ -261,12 +257,20 @@ export namespace Modules
             }
         }
     }
+
+    export inline void UpdateTick()
+    {
+        for (Module* module : All())
+        {
+            if (module != nullptr && module->enabledRef())
+            {
+                module->onUpdate();
+            }
+        }
+    }
 }
 
 inline void Module::Register()
 {
     Modules::Register(this);
 }
-
-// VK constants moved to Keys module
-

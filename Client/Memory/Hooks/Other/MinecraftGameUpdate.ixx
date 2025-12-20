@@ -7,6 +7,7 @@ import Memory;
 import HookManager;
 import SigManager;
 import Global;
+import Module;
 
 namespace Hooks::Other::MinecraftGameUpdate
 {
@@ -15,6 +16,7 @@ namespace Hooks::Other::MinecraftGameUpdate
 
     std::uint64_t Detour(void* self)
     {
+        Modules::UpdateTick();
         return originalFunction(self);
     }
 
