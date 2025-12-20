@@ -3,6 +3,8 @@ module;
 #include <string>
 #include <filesystem>
 #include <wincodec.h>
+#include <iostream>
+#include <string_view>
 #pragma comment(lib, "urlmon.lib")
 
 export module Utils;
@@ -60,4 +62,30 @@ export namespace Utils {
     __int64 getBase() {
         return reinterpret_cast<__int64>(GetModuleHandleA(NULL));
 	}
+
+    namespace Mem {
+        inline bool isValidPtr(void* ptr) {
+            uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
+            return (addr >= 0x0000010000000000 && addr <= 0x00007FFFFFFFFFFF && addr % 8 == 0);
+        }
+
+        inline bool isModulePtr(void* ptr) {
+            if (!isValidPtr(ptr)) return false;
+            uintptr_t vft = *reinterpret_cast<uintptr_t*>(ptr);
+            uintptr_t prefix = (vft >> 32);
+            return (prefix == 0x7FF7 || prefix == 0x7FF6 || prefix == 0x7FF5 || prefix == 0x7FF);
+        }
+    }
+
+    namespace Log {
+        inline void Info(std::string_view msg) {
+            std::cout << "\033[38;5;141m[+]\033[0m " << msg << std::endl;
+        }
+        inline void Success(std::string_view msg) {
+            std::cout << "\033[38;5;121m[+]\033[0m " << msg << std::endl;
+        }
+        inline void Error(std::string_view msg) {
+            std::cout << "\033[38;5;197m[!]\033[0m " << msg << std::endl;
+        }
+    }
 }

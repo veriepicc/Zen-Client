@@ -17,13 +17,12 @@ module;
 
 export module HookManager;
 import SigManager;
+import Utils;
 
 export class HookManager
 {
 public:
     struct FuncHook { virtual void Initialize() = 0; virtual ~FuncHook() = default; };
-
-    // Input hooks are implemented as self-registering modules; no auto-install here
 
     HookManager()
     {
@@ -47,34 +46,24 @@ public:
         std::scoped_lock lock(mutex);
         if (!ensureInitialized()) return false;
 
-        if (targets.count(target) != 0)
-        {
-            return true;
-        }
+        if (targets.count(target) != 0) return true;
 
         const auto st_create = Jonathan::create_hook(target, reinterpret_cast<void*>(detour), reinterpret_cast<void**>(original));
-        if (st_create != Jonathan::status::ok)
-        {
-            return false;
-        }
+        if (st_create != Jonathan::status::ok) return false;
+        
         targets.insert(target);
         return true;
     }
 
-    // Raw variant used by C-style API where function type is erased
     bool createRaw(void* target, void* detour, void** original)
     {
         std::scoped_lock lock(mutex);
         if (!ensureInitialized()) return false;
-        if (targets.count(target) != 0)
-        {
-            return true;
-        }
+        if (targets.count(target) != 0) return true;
+
         const auto st_create = Jonathan::create_hook(target, detour, original);
-        if (st_create != Jonathan::status::ok)
-        {
-            return false;
-        }
+        if (st_create != Jonathan::status::ok) return false;
+
         targets.insert(target);
         return true;
     }
@@ -83,36 +72,28 @@ public:
     {
         std::scoped_lock lock(mutex);
         if (!ensureInitialized()) return false;
-        const auto st = Jonathan::enable_hook(nullptr);
-        const bool ok = (st == Jonathan::status::ok);
-        if (ok) std::cout << "[Hooks] All enabled" << std::endl;
-        return ok;
+        return (Jonathan::enable_hook(nullptr) == Jonathan::status::ok);
     }
 
     bool disableAll()
     {
         std::scoped_lock lock(mutex);
         if (!initialized) return true;
-        const bool ok = (Jonathan::disable_hook(nullptr) == Jonathan::status::ok);
-        if (ok) std::cout << "[Hooks] All disabled" << std::endl;
-        return ok;
+        return (Jonathan::disable_hook(nullptr) == Jonathan::status::ok);
     }
 
     bool enable(void* target)
     {
         std::scoped_lock lock(mutex);
         if (!ensureInitialized()) return false;
-        const auto st = Jonathan::enable_hook(target);
-        const bool ok = (st == Jonathan::status::ok);
-        return ok;
+        return (Jonathan::enable_hook(target) == Jonathan::status::ok);
     }
 
     bool disable(void* target)
     {
         std::scoped_lock lock(mutex);
         if (!initialized) return true;
-        const bool ok = (Jonathan::disable_hook(target) == Jonathan::status::ok);
-        return ok;
+        return (Jonathan::disable_hook(target) == Jonathan::status::ok);
     }
 
     bool remove(void* target)
@@ -132,11 +113,9 @@ public:
         for (auto* h : targets)
             ok = ok && (Jonathan::remove_hook(h) == Jonathan::status::ok);
         targets.clear();
-        if (ok) std::cout << "[Hooks] All removed" << std::endl;
         return ok;
     }
 
-    // Convenience: create + enable in one call
     template <typename T>
     bool hook(void* target, T detour, T* original)
     {
@@ -156,16 +135,10 @@ public:
         {
             hookObj->Initialize();
         }
-        // Self-registering hooks will install themselves via HookRegistry
     }
 
     std::size_t ownedCount() const { return ownedHooks.size(); }
     std::size_t targetCount() const { return targets.size(); }
-
-    void logStatus() const
-    {
-        std::cout << "[Hooks] Status: " << targets.size() << " active hooks" << std::endl;
-    }
 
 private:
     bool ensureInitialized()
@@ -174,15 +147,9 @@ private:
         if (Jonathan::init() == Jonathan::status::ok)
         {
             initialized = true;
-            std::cout << "[Hooks] Initialized" << std::endl;
-        }
-        else
-        {
-            std::cout << "[Hooks] Initialization failed" << std::endl;
         }
         return initialized;
     }
-
 
     std::vector<std::unique_ptr<FuncHook>> ownedHooks;
     std::unordered_set<void*> targets;
@@ -266,8 +233,5 @@ export namespace HookManagerAPI
             hm.remove(h.target);
         }
         HookInternal::g_hooks.clear();
-        std::cout << "[Hooks] Shutdown complete" << std::endl;
     }
 }
-
-

@@ -11,7 +11,7 @@ import SDK;
 export class Tessellator {
 public:
     void begin(mce::PrimitiveMode vertexFormat = mce::PrimitiveMode::TriangleList, int maxVertices = 0, bool buildFaceData = false) {
-        void* target = SigManager::Tessellator_begin_b ? SigManager::Tessellator_begin_b : SigManager::Tessellator_begin_a;
+        void* target = SigManager::Tessellator_begin;
         Memory::CallFunc<void, void*, mce::PrimitiveMode, int, bool>(target, this, vertexFormat, maxVertices, buildFaceData);
     }
 
@@ -21,7 +21,7 @@ public:
     }
 
     void vertexUV(float x, float y, float z, float u, float v) {
-        void* target = SigManager::Tessellator_vertexUV_b ? SigManager::Tessellator_vertexUV_b : SigManager::Tessellator_vertexUV_a;
+        void* target = SigManager::Tessellator_vertexUV;
         Memory::CallFunc<void, void*, float, float, float, float, float>(target, this, x, y, z, u, v);
     }
 

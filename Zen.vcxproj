@@ -211,12 +211,14 @@
     <ClCompile Include="Client\Memory\Hooks\Render\DisplayClientMessage.ixx" />
     <ClCompile Include="Client\Memory\Hooks\Render\RenderLevel.ixx" />
     <ClCompile Include="Client\Module\Misc\Uninject.ixx" />
+    <ClCompile Include="Client\Module\Misc\EntityListDebug.ixx" />
     <ClCompile Include="Client\SDK\Block\BlockSource.ixx" />
     <ClCompile Include="Client\SDK\ClientInstance.ixx" />
     <ClCompile Include="Client\SDK\Actor\Actor.ixx" />
     <ClCompile Include="Client\SDK\Actor\LocalPlayer.ixx" />
     <ClCompile Include="Client\SDK\Components\AABBShapeComponent.ixx" />
     <ClCompile Include="Client\SDK\Components\ActorDataFlagComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\ActorOwnerComponent.ixx" />
     <ClCompile Include="Client\SDK\Components\ActorEquipmentComponent.ixx" />
     <ClCompile Include="Client\SDK\Components\ActorGameTypeComponent.ixx" />
     <ClCompile Include="Client\SDK\Components\ActorRotationComponent.ixx" />

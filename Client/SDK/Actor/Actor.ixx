@@ -7,6 +7,7 @@ module;
 export module Actor;
 
 import Paul;
+import Utils;
 import MoveInputComponent;
 import StateVectorComponent;
 import ActorRotationComponent;
@@ -21,11 +22,9 @@ import SynchedActorDataComponent;
 import MobEffectsComponent;
 import AttributesComponent;
 
-
-// Minecraft uses a custom entity ID with specific bit layout for versioning
 class EntityId;
 
-struct EntityIdTraits
+struct EntityIdTraits 
 {
     using value_type   = EntityId;
     using entity_type  = std::uint32_t;
@@ -35,30 +34,28 @@ struct EntityIdTraits
     static constexpr entity_type version_mask = 0x3FFF;
 };
 
-template<>
-class entt::entt_traits<EntityId> : public entt::basic_entt_traits<EntityIdTraits>
+template <>
+class entt::entt_traits<EntityId> : public entt::basic_entt_traits<EntityIdTraits> 
 {
 public:
     static constexpr entity_type page_size = 2048;
 };
 
-class EntityId : public entt::entt_traits<EntityId>
+class EntityId : public entt::entt_traits<EntityId> 
 {
 public:
     entity_type rawId{};
 
-    template<std::integral IntegralType>
-    requires(!std::is_same_v<std::remove_cvref_t<IntegralType>, bool>)
-    constexpr EntityId(IntegralType id) : rawId(static_cast<entity_type>(id)) {}
+    template <std::integral T>
+    requires(!std::is_same_v<std::remove_cvref_t<T>, bool>)
+    constexpr EntityId(T id) : rawId(static_cast<entity_type>(id)) {}
 
     constexpr bool isNull() const { return *this == entt::null; }
     constexpr operator entity_type() const { return rawId; }
     constexpr bool operator==(const EntityId& other) const { return rawId == other.rawId; }
 };
 
-
-// The game's entity registry wrapper
-class EntityRegistry : public std::enable_shared_from_this<EntityRegistry>
+class EntityRegistry : public std::enable_shared_from_this<EntityRegistry> 
 {
 public:
     std::string name;
@@ -66,141 +63,67 @@ public:
     std::uint32_t id;
 };
 
-
-// The context that binds an entity to its registry
-struct EntityContext
+struct EntityContext 
 {
-    EntityRegistry& owningRegistry;
-    entt::basic_registry<EntityId>& componentRegistry;
+    EntityRegistry* registry;
+    entt::basic_registry<EntityId>* enttRegistry;
     EntityId entityId;
 
-    bool isValid() const
+    bool isValid() const 
     {
-        return componentRegistry.valid(entityId);
+        return Utils::Mem::isValidPtr(registry) && Utils::Mem::isValidPtr(enttRegistry);
     }
 
-    template<typename ComponentType>
-    ComponentType* getComponent()
+    template <typename T>
+    T* getComponent() 
     {
-        if (!isValid()) return nullptr;
-        
-        // For components that might be empty/tags, we cast the result of try_get 
-        // to handle cases where entt returns void* or optimized types.
-        return (ComponentType*)componentRegistry.try_get<ComponentType>(entityId);
+        return isValid() ? (T*)enttRegistry->try_get<T>(entityId) : nullptr;
     }
 };
 
-
-export class Actor
+export class Actor 
 {
 public:
-    EntityContext& getEntityContext()
+    EntityContext& getEntityContext() 
     {
-        // EntityContext lives at offset 0x8 from Actor base
         return *reinterpret_cast<EntityContext*>(reinterpret_cast<std::uintptr_t>(this) + 0x8);
     }
 
-    MoveInputComponent* getMoveInputComponent()
+    // --- Component Accessors ---
+    
+    MoveInputComponent* getMoveInputComponent() { return getEntityContext().getComponent<MoveInputComponent>(); }
+    StateVectorComponent* getStateVectorComponent() { return getEntityContext().getComponent<StateVectorComponent>(); }
+    ActorRotationComponent* getActorRotationComponent() { return getEntityContext().getComponent<ActorRotationComponent>(); }
+    RenderPositionComponent* getRenderPositionComponent() { return getEntityContext().getComponent<RenderPositionComponent>(); }
+    AABBShapeComponent* getAABBShapeComponent() { return getEntityContext().getComponent<AABBShapeComponent>(); }
+    ActorDataFlagComponent* getActorDataFlagComponent() { return getEntityContext().getComponent<ActorDataFlagComponent>(); }
+    ActorGameTypeComponent* getActorGameTypeComponent() { return getEntityContext().getComponent<ActorGameTypeComponent>(); }
+    OnGroundFlagComponent* getOnGroundFlagComponent() { return getEntityContext().getComponent<OnGroundFlagComponent>(); }
+    RuntimeIDComponent* getRuntimeIDComponent() { return getEntityContext().getComponent<RuntimeIDComponent>(); }
+    ActorEquipmentComponent* getActorEquipmentComponent() { return getEntityContext().getComponent<ActorEquipmentComponent>(); }
+    SynchedActorDataComponent* getSynchedActorDataComponent() { return getEntityContext().getComponent<SynchedActorDataComponent>(); }
+    MobEffectsComponent* getMobEffectsComponent() { return getEntityContext().getComponent<MobEffectsComponent>(); }
+    AttributesComponent* getAttributesComponent() { return getEntityContext().getComponent<AttributesComponent>(); }
+
+    // --- Helper Methods ---
+
+    Paul::Vec3f* getPosition() 
     {
-        auto& context = getEntityContext();
-        return context.getComponent<MoveInputComponent>();
+        auto* svc = getStateVectorComponent();
+        return svc ? &svc->position : nullptr;
     }
 
-    StateVectorComponent* getStateVectorComponent()
+    Paul::Vec3f* getVelocity() 
     {
-        auto& context = getEntityContext();
-        return context.getComponent<StateVectorComponent>();
-    }
-    
-    ActorRotationComponent* getActorRotationComponent()
-    {
-        auto& context = getEntityContext();
-        return context.getComponent<ActorRotationComponent>();
-    }
-    
-    RenderPositionComponent* getRenderPositionComponent()
-    {
-        auto& context = getEntityContext();
-        return context.getComponent<RenderPositionComponent>();
-    }
-    
-    AABBShapeComponent* getAABBShapeComponent()
-    {
-        auto& context = getEntityContext();
-        return context.getComponent<AABBShapeComponent>();
-    }
-    
-    ActorDataFlagComponent* getActorDataFlagComponent()
-    {
-        auto& context = getEntityContext();
-        return context.getComponent<ActorDataFlagComponent>();
-    }
-    
-    ActorGameTypeComponent* getActorGameTypeComponent()
-    {
-        auto& context = getEntityContext();
-        return context.getComponent<ActorGameTypeComponent>();
-    }
-    
-    OnGroundFlagComponent* getOnGroundFlagComponent()
-    {
-        auto& context = getEntityContext();
-        return context.getComponent<OnGroundFlagComponent>();
-    }
-    
-    RuntimeIDComponent* getRuntimeIDComponent()
-    {
-        auto& context = getEntityContext();
-        return context.getComponent<RuntimeIDComponent>();
-    }
-    
-    ActorEquipmentComponent* getActorEquipmentComponent()
-    {
-        auto& context = getEntityContext();
-        return context.getComponent<ActorEquipmentComponent>();
-    }
-    
-    SynchedActorDataComponent* getSynchedActorDataComponent()
-    {
-        auto& context = getEntityContext();
-        return context.getComponent<SynchedActorDataComponent>();
-    }
-    
-    MobEffectsComponent* getMobEffectsComponent()
-    {
-        auto& context = getEntityContext();
-        return context.getComponent<MobEffectsComponent>();
-    }
-    
-    AttributesComponent* getAttributesComponent()
-    {
-        auto& context = getEntityContext();
-        return context.getComponent<AttributesComponent>();
+        auto* svc = getStateVectorComponent();
+        return svc ? &svc->velocity : nullptr;
     }
 
-    Paul::Vec3f* getPosition()
+    Paul::Vec2f* getRotation() 
     {
-        auto* stateVector = getStateVectorComponent();
-        if (!stateVector) return nullptr;
-        return &stateVector->position;
+        auto* arc = getActorRotationComponent();
+        return arc ? &arc->rotation : nullptr;
     }
 
-    Paul::Vec3f* getVelocity()
-    {
-        auto* stateVector = getStateVectorComponent();
-        if (!stateVector) return nullptr;
-        return &stateVector->velocity;
-    }
-    
-    Paul::Vec2f* getRotation()
-    {
-        auto* rotationComponent = getActorRotationComponent();
-        if (!rotationComponent) return nullptr;
-        return &rotationComponent->rotation;
-    }
-    
-    bool isOnGround()
-    {
-        return getOnGroundFlagComponent() != nullptr;
-    }
+    bool isOnGround() { return getOnGroundFlagComponent() != nullptr; }
 };

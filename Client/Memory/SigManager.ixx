@@ -52,15 +52,6 @@ public:
         return sigs;
     }
 
-    static void logStatus()
-    {
-        std::cout << "[Sig] entries=" << sigs.size() << std::endl;
-        for (const auto& kv : sigs)
-        {
-            std::cout << "  - " << kv.first << " = 0x" << std::hex << kv.second << std::dec << std::endl;
-        }
-    }
-
     REGISTER_SIG(ContainerScreenController_onContainerSlotHovered,
                  "48 89 ? ? ? 48 89 ? ? ? 41 ? 41 ? 41 ? 48 83 EC ? 45 33 ? 45 8B",
                  SigType::Sig,
@@ -100,24 +91,16 @@ public:
                  SigType::Sig,
                  0)
 
-    REGISTER_SIG(Tessellator_begin_a,
+    REGISTER_SIG(Tessellator_begin,
                  "40 53 55 48 83 EC 28 80 B9",
                  SigType::Sig,
                  0)
-    REGISTER_SIG(Tessellator_vertexUV_a,
+    REGISTER_SIG(Tessellator_vertexUV,
                  "48 83 EC ? 80 B9 ? ? ? ? ? 0F 57 E4",
-                 SigType::Sig,
-                 0)
-    REGISTER_SIG(Tessellator_begin_b,
-                 "48 89 5C 24 ? 56 48 83 EC ? 80 B9 ? ? ? ? ? 45 0F B6",
                  SigType::Sig,
                  0)
     REGISTER_SIG(Tessellator_vertex,
                  "40 57 48 81 EC ? ? ? ? 0F 29 7C ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 44 24 ? 8B 81",
-                 SigType::Sig,
-                 0)
-    REGISTER_SIG(Tessellator_vertexUV_b,
-                 "48 83 EC ? 48 8B 94",
                  SigType::Sig,
                  0)
     REGISTER_SIG(Tessellator_colorF,
@@ -174,16 +157,6 @@ public:
                  0)
     REGISTER_SIG(MouseDevice_feed,
                  "? ? ? ? ? ? ? ? 89 68 ? 48 89 70 ? 57 41 54 41 55 41 56 41 57 48 83 EC ? 44 0F B7 BC 24 ? ? ? ? 48 8B D9",
-                 SigType::Sig,
-                 0)
-
-    REGISTER_SIG(tryGetMoveInputComponent,
-                 "48 89 5C 24 ? 57 48 83 EC 30 8B ? C8 25 2E CD 8B 46",
-                 SigType::Sig,
-                 0)
-
-    REGISTER_SIG(tryGetStateVectorComponent,
-                 "48 89 5C 24 ? 57 48 83 EC 30 8B ? C8 25 91 3C C9 0E",
                  SigType::Sig,
                  0)
 

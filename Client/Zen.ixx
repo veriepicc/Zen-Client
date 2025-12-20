@@ -5,6 +5,7 @@ module;
 #include <iostream>
 #include <iomanip>
 #include <chrono>
+#include <string>
 #include <filesystem>
 
 export module Zen;
@@ -14,6 +15,7 @@ import SigManager;
 import Module;
 import SoundPlayer;
 import Utils;
+import EntityListDebug;
 
 namespace Zen::Detail
 {
@@ -28,6 +30,13 @@ namespace Zen::Detail
         freopen_s(&fptr, "CONOUT$", "w", stdout);
         freopen_s(&fptr, "CONOUT$", "w", stderr);
         freopen_s(&fptr, "CONIN$", "r", stdin);
+
+        // Enable ANSI escape codes
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD dwMode = 0;
+        GetConsoleMode(hOut, &dwMode);
+        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        SetConsoleMode(hOut, dwMode);
     }
 
     inline void FreeAndUnbindConsole()
@@ -57,7 +66,7 @@ export namespace Zen
 
             GetSoundPlayer().shutdown();
             SigManager::deinitialize();
-            Detail::FreeAndUnbindConsole();
+            FreeAndUnbindConsole();
             ExitThread(0);
             return 0;
         }
@@ -65,50 +74,54 @@ export namespace Zen
 
     inline void Initialize(HMODULE hModule)
     {
+        auto tStart = std::chrono::steady_clock::now();
         Module = hModule;
         Detail::AllocateAndBindConsole();
         SetConsoleTitleW(L"Zen Client");
+        
         std::cout.setf(std::ios::unitbuf);
         std::cerr.setf(std::ios::unitbuf);
-        std::cout << "Zen Client has been initialized!" << std::endl;
-        auto tStart = std::chrono::high_resolution_clock::now();
+
+        // Zen ASCII Logo
+        std::cout << "\033[38;5;141m" << R"(
+  ______              
+ |___  /              
+    / / ___ _ __      
+   / / / _ \ '_ \     
+  / /_|  __/ | | |    
+ /_____\___|_| |_|    
+)" << "\033[0m" << std::endl;
+
+        Utils::Log::Info("Initializing Zen architecture...");
+
         SigManager::initialize();
-        {
-            const auto& sigs = SigManager::getSigs();
-            std::size_t resolved = 0, missing = 0;
-            for (const auto& kv : sigs) {
-                if (kv.second != 0) ++resolved; else ++missing;
-            }
-            std::cout << "[Zen] Signatures: total=" << sigs.size()
-                << " resolved=" << resolved
-                << " missing=" << missing << std::endl;
-            SigManager::logStatus();
-            if (missing > 0) {
-                std::cout << "[Zen] Missing signatures:" << std::endl;
-                for (const auto& kv : sigs) {
-                    if (kv.second == 0) std::cout << "  - " << kv.first << std::endl;
-                }
-            }
+        
+        const auto& sigs = SigManager::getSigs();
+        std::size_t missing = 0;
+        for (const auto& kv : sigs) {
+            if (kv.second == 0) ++missing;
         }
-        auto tAfterSigs = std::chrono::high_resolution_clock::now();
+
+        if (missing > 0) {
+            Utils::Log::Error("Signature mismatch detected. Some features may be disabled.");
+            for (const auto& kv : sigs) {
+                if (kv.second == 0) std::cout << "  \033[38;5;197m-\033[0m " << kv.first << std::endl;
+            }
+        } else {
+            Utils::Log::Success("Signatures resolved successfully.");
+        }
 
         HookRegistry::InitializeAll();
-        auto tAfterHooks = std::chrono::high_resolution_clock::now();
         auto& hm = GetHookManager();
         hm.enableAll();
-        hm.logStatus();
+        
         GetSoundPlayer().initialize();
 
-        auto tAfterEnable = std::chrono::high_resolution_clock::now();
+        auto tEnd = std::chrono::steady_clock::now();
+        auto totalMs = std::chrono::duration_cast<std::chrono::milliseconds>(tEnd - tStart).count();
 
-        auto sigMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterSigs - tStart).count();
-        auto hooksMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterHooks - tAfterSigs).count();
-        auto enableMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterEnable - tAfterHooks).count();
-        auto totalMs = std::chrono::duration_cast<std::chrono::milliseconds>(tAfterEnable - tStart).count();
-        std::cout << "[Zen] init times: sigs=" << sigMs
-            << "ms, hooks=" << hooksMs
-            << "ms, enable=" << enableMs
-            << "ms, total=" << totalMs << "ms" << std::endl;
+        Utils::Log::Success("Zen Client is ready. Welcome back. (" + std::to_string(totalMs) + "ms)");
+        std::cout << std::endl;
     }
 
     inline void Eject()
