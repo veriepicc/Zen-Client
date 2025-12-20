@@ -280,6 +280,10 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
+    <ClCompile Include="Client\SDK\Render\GLMatrix.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
     <ClCompile Include="Client\SDK\Tesselator\ScreenContext.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
@@ -311,6 +315,10 @@
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Utils\Keys.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
+    <ClCompile Include="Client\Utils\RenderUtils.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
@@ -379,6 +387,10 @@
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>
     <ClCompile Include="Client\Module\Visual\ClickGui.ixx">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrimaryModuleInterface>true</PrimaryModuleInterface>
+    </ClCompile>
+    <ClCompile Include="Client\Module\Visual\ESP.ixx">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrimaryModuleInterface>true</PrimaryModuleInterface>
     </ClCompile>

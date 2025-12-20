@@ -10,6 +10,8 @@ import LocalPlayer;
 import Actor;
 import ActorOwnerComponent;
 import Utils;
+import GLMatrix;
+import Paul;
 
 export namespace Global 
 {
@@ -17,6 +19,10 @@ export namespace Global
 
     void setClientInstance(ClientInstance* instance) { clientInstance = instance; }
     ClientInstance* getClientInstance() { return clientInstance; }
+
+    inline GLMatrix viewMatrix;
+    inline Paul::Vec3f cameraPos;
+    inline Paul::Vec2f fov;
 
     LocalPlayer* getLocalPlayer() 
     {

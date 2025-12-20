@@ -54,7 +54,7 @@ export namespace Paul
 	[[nodiscard]] constexpr T Saturate(T v) noexcept { return Clamp<T>(v, static_cast<T>(0), static_cast<T>(1)); }
 
 	template <typename T, typename U>
-	[[nodiscard]] constexpr auto Lerp(const T& a, const T& b, U t) noexcept -> T { return static_cast<T>(a + (b - a) * static_cast<T>(t)); }
+	[[nodiscard]] constexpr auto Lerp(const T& a, const T& b, U t) noexcept -> T { return static_cast<T>(a + (b - a) * t); }
 
 	template <typename T, typename U>
 	[[nodiscard]] constexpr auto Remap(U x, U inMin, U inMax, T outMin, T outMax) noexcept -> T

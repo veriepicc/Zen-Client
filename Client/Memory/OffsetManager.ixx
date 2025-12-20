@@ -8,6 +8,9 @@ export module OffsetManager;
 export namespace Offsets
 {
     Offset(ClientInstance_guiData, 0x5B8)
+    Offset(ClientInstance_viewMatrix, 0x388)
+    Offset(ClientInstance_fovX, 0x740)
+    Offset(ClientInstance_fovY, 0x754)
 
     Offset(MinecraftUIRenderContext_clientInstance, 0x08)
     Offset(MinecraftUIRenderContext_screenContext, 0x10)

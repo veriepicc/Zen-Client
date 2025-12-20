@@ -9,6 +9,8 @@ import OffsetManager;
 import LevelRenderer;
 import BlockSource;
 import LocalPlayer;
+import GLMatrix;
+import Paul;
 
 export class ClientInstance {
 public:
@@ -28,5 +30,14 @@ public:
 	}
 	BlockSource* getRegion() {
 		return Memory::CallVFunc<BlockSource*>(30, this);
+	}
+	GLMatrix getViewMatrix() {
+		return Memory::MemberAt<GLMatrix>(this, Offsets::ClientInstance_viewMatrix);
+	}
+	Paul::Vec2f getFov() {
+		return {
+			Memory::MemberAt<float>(this, Offsets::ClientInstance_fovX),
+			Memory::MemberAt<float>(this, Offsets::ClientInstance_fovY)
+		};
 	}
 };

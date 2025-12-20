@@ -23,12 +23,12 @@ public:
         return Memory::MemberAt<float>(this, Offsets::GuiData_GuiScale);
     }
 
-    static GuiData* fromClientInstance(ClientInstance* clientInstance) {
+    static inline GuiData* fromClientInstance(ClientInstance* clientInstance) {
         if (!clientInstance) return nullptr;
         return Memory::MemberAt<GuiData*>(clientInstance, Offsets::ClientInstance_guiData);
     }
 
-    static GuiData* fromClientInstance(void* clientInstance) {
+    static inline GuiData* fromClientInstance(void* clientInstance) {
         return fromClientInstance(reinterpret_cast<ClientInstance*>(clientInstance));
     }
 };

@@ -1,6 +1,7 @@
 module;
 #include <iostream>
 #include <string>
+#include <memory>
 #include "imgui/imgui.h"
 
 export module SetupAndRender;
@@ -8,7 +9,6 @@ export module SetupAndRender;
 import SigManager;
 import MinecraftUIRenderContext;
 import HookManager;
-
 import MeshHelpers;
 import MaterialPtr;
 import ScreenContext;
@@ -19,161 +19,127 @@ import TexturePtr;
 import Color;
 import BedrockTextureData;
 import RectangleArea;
-// ImGui bridge
 import imgui_impl_bigrat;
 import Module;
 import ResourceLocation;
 import Utils;
 import Global;
 
-
 namespace Hooks::Render::SetupAndRender
 {
-    using SetupAndRenderFunction = void(*)(void*, MinecraftUIRenderContext*);
-    using DrawImageFunction = void(*)(MinecraftUIRenderContext*, BedrockTextureData*, Paul::Vec2<float>*, Paul::Vec2<float>*, Paul::Vec2<float>*, Paul::Vec2<float>*, bool);
+    using SetupAndRenderFn = void(*)(void*, MinecraftUIRenderContext*);
+    using DrawImageFn = void(*)(MinecraftUIRenderContext*, BedrockTextureData*, Paul::Vec2f*, Paul::Vec2f*, Paul::Vec2f*, Paul::Vec2f*, bool);
 
     struct State
     {
-        static inline SetupAndRenderFunction originalFunction = nullptr;
-        static inline bool imageInitialized = false;
-        static inline TexturePtr imageTexture{};
-        static inline DrawImageFunction originalDrawImage = nullptr;
-        static inline bool drewOnceThisFrame = false;
+        static inline SetupAndRenderFn originalFunction = nullptr;
+        static inline DrawImageFn originalDrawImage = nullptr;
+        static inline TexturePtr martTexture{};
+        static inline bool initialized = false;
+        static inline bool drewThisFrame = false;
     };
 
-    inline void DrawImageDetour(MinecraftUIRenderContext* ctx,
-                                BedrockTextureData* tex,
-                                Paul::Vec2<float>* pos,
-                                Paul::Vec2<float>* size,
-                                Paul::Vec2<float>* uvPos,
-                                Paul::Vec2<float>* uvSize,
-                                bool flag)
+    /**
+     * detoured drawImage to inject imgui before anything else renders
+     */
+    inline void DrawImageDetour(MinecraftUIRenderContext* ctx, BedrockTextureData* tex, Paul::Vec2f* p, Paul::Vec2f* s, Paul::Vec2f* u1, Paul::Vec2f* u2, bool f)
     {
-        // First image draw of the frame: submit our ImGui pass so it appears underneath game UI
-        if (!State::drewOnceThisFrame)
+        if (!State::drewThisFrame)
         {
+            // Update texture handle if resource location is valid
+            if (!State::martTexture.clientTexture && State::martTexture.resourceLocation)
+            {
+                TexturePtr fetched;
+                ctx->getTexture(fetched, *State::martTexture.resourceLocation, false);
+                if (fetched.clientTexture) State::martTexture = fetched;
+            }
+
             ImGui_ImplBigRat::NewFrame(1.0f / 60.0f, 0.0f, 0.0f, 1.0f, 1.0f);
             ImGui::NewFrame();
-            // Try to fetch texture handle if we have a resource location
-            if (!State::imageTexture.clientTexture && State::imageTexture.resourceLocation)
-            {
-                TexturePtr fetched;
-                ctx->getTexture(fetched, *State::imageTexture.resourceLocation, /*forceReload*/false);
-                if (fetched.clientTexture)
-                {
-                    State::imageTexture = fetched;
-                }
-            }
 
-            // MART window
-            ImGui::SetNextWindowPos(ImVec2(420, 120), ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
             ImGui::Begin("Mart", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-            if (State::imageTexture.clientTexture)
-            {
-                ImGui::Image((ImTextureID)&State::imageTexture, ImVec2(128, 128));
-            }
+            if (State::martTexture.clientTexture)
+                ImGui::Image((ImTextureID)&State::martTexture, ImVec2(128, 128));
             else
-            {
-                ImGui::TextUnformatted("Loading dog texture...");
-            }
+                ImGui::TextUnformatted("Summoning Mart...");
             ImGui::End();
 
-            // Render module UIs (e.g., ClickGui)
             Modules::RenderTick(ctx);
+
             ImGui::Render();
             ImGui_ImplBigRat::RenderDrawData(ImGui::GetDrawData(), ctx);
-
-            // If texture handle not yet valid, try to fetch it again (async load)
-            if (!State::imageTexture.clientTexture && State::imageTexture.resourceLocation)
-            {
-                TexturePtr fetched;
-                ctx->getTexture(fetched, *State::imageTexture.resourceLocation, /*forceReload*/false);
-                if (fetched.clientTexture)
-                {
-                    State::imageTexture = fetched;
-                }
-            }
-
-            State::drewOnceThisFrame = true;
+            State::drewThisFrame = true;
         }
-        State::originalDrawImage(ctx, tex, pos, size, uvPos, uvSize, flag);
+        State::originalDrawImage(ctx, tex, p, s, u1, u2, f);
     }
 
-    inline void Detour(void* screenView, MinecraftUIRenderContext* renderContext)
+    /**
+     * main rendering detour
+     */
+    inline void Detour(void* screenView, MinecraftUIRenderContext* rc)
     {
-        if (!renderContext) {
-            if (State::originalFunction) State::originalFunction(screenView, renderContext);
+        if (!rc) {
+            if (State::originalFunction) State::originalFunction(screenView, rc);
             return;
         }
-		if (!Global::getClientInstance()) Global::setClientInstance(renderContext->getClientInstance());
 
-        State::drewOnceThisFrame = false;
-
-        // Texture bootstrap for Mart image once
-        if (!State::imageInitialized)
+        Global::setClientInstance(rc->getClientInstance());
+        
+        // freshen global matrices/camera
+        if (auto* ci = Global::getClientInstance())
         {
-            std::string base = Utils::GetRoamingPath();
-            if (!base.empty())
+            Global::viewMatrix = ci->getViewMatrix();
+            Global::fov = ci->getFov();
+            if (auto* lr = ci->getLevelRenderer())
             {
-                for (char& ch : base) if (ch == '\\') ch = '/';
-                const std::string path = base + "/image.png";
-                auto rl = std::make_shared<ResourceLocation>(ResourceLocation(path, /*external*/true));
-                State::imageTexture.resourceLocation = rl;
-                TexturePtr tp = renderContext->createTexture(path, /*external*/true, /*forceReload*/true);
-                renderContext->touchTexture(*rl);
-                TexturePtr fetched;
-                renderContext->getTexture(fetched, *rl, /*forceReload*/false);
-                if (fetched.clientTexture)
+                if (auto* player = lr->getLevelRendererPlayer())
                 {
-                    State::imageTexture = fetched;
+                    Global::cameraPos = player->getCameraPos();
                 }
-                State::imageInitialized = State::imageTexture.clientTexture != nullptr;
             }
         }
-        //
-        // Install drawImage vfunc hook once so we can inject before other UI draws
-        if (!State::originalDrawImage)
-        {
-            void** vtable = *reinterpret_cast<void***>(renderContext);
-            void* target = vtable[7];
-            auto& hookManager = GetHookManager();
-            hookManager.hook<DrawImageFunction>(target, DrawImageDetour, &State::originalDrawImage);
-        }
 
-        // Initialize ImGui backend once
-        static bool imguiInit = false;
-        if (!imguiInit)
-        {
-            ImGui_ImplBigRat::Init(renderContext);
-            imguiInit = true;
-        }
+        State::drewThisFrame = false;
 
-        // ImGui rendering is executed in DrawImageDetour on first image draw each frame
+        // one-time init
+        if (!State::initialized)
+        {
+            std::string path = Utils::GetRoamingPath();
+            if (!path.empty())
+            {
+                for (char& c : path) if (c == '\\') c = '/';
+                path += "/image.png";
+
+                auto rl = std::make_shared<ResourceLocation>(path, true);
+                State::martTexture.resourceLocation = rl;
+                rc->createTexture(path, true, true);
+                rc->touchTexture(*rl);
+            }
+
+            // Hook drawImage (index 7) for injection
+            void** vtable = *reinterpret_cast<void***>(rc);
+            GetHookManager().hook<DrawImageFn>(vtable[7], DrawImageDetour, &State::originalDrawImage);
+
+            ImGui_ImplBigRat::Init(rc);
+            State::initialized = true;
+        }
 
         if (State::originalFunction)
-            State::originalFunction(screenView, renderContext);
+            State::originalFunction(screenView, rc);
     }
 }
 
 export namespace Hooks::Render::SetupAndRender
 {
+    inline TexturePtr* GetMartTexture() { return &State::martTexture; }
+
     inline bool Install()
     {
         void* target = SigManager::Setupandrender;
-        if (!target)
-        {
-            return false;
-        }
-
-        auto& hookManager = GetHookManager();
-        return hookManager.hook<Hooks::Render::SetupAndRender::SetupAndRenderFunction>(
-            target,
-            Hooks::Render::SetupAndRender::Detour,
-            &Hooks::Render::SetupAndRender::State::originalFunction
-        );
+        if (!target) return false;
+        return GetHookManager().hook<SetupAndRenderFn>(target, Detour, &State::originalFunction);
     }
 }
 
 static HookRegistry::Registration RegisterHook{ &Hooks::Render::SetupAndRender::Install };
-
-

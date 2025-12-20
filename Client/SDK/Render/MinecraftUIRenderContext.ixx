@@ -75,6 +75,16 @@ public:
         Memory::CallVFunc<void, BedrockTextureData&, Paul::Vec2<float>&, Paul::Vec2<float>&, Paul::Vec2<float>&, Paul::Vec2<float>&, bool>(7, this, *texture.clientTexture, pos, size, uvPos, uvSize, false);
     }
 
+    void fillRectangle(const SDK::RectangleArea& rect, const Paul::ColorF& color)
+    {
+        Memory::CallVFunc<void, const SDK::RectangleArea&, const Paul::ColorF&, float>(12, this, rect, color, color.a);
+    }
+
+    void drawText(void* font, const SDK::RectangleArea& rect, const std::string& text, const Paul::ColorF& color, float alpha, unsigned int alignment, const void* textMeasureData, const void* caretMeasureData)
+    {
+        Memory::CallVFunc<void, void*, const SDK::RectangleArea&, const std::string&, const Paul::ColorF&, float, unsigned int, const void*, const void*>(5, this, font, rect, text, color, alpha, alignment, textMeasureData, caretMeasureData);
+    }
+
     void flushImages(mce::Color &color, float opacity, HashedString &hashedString)
     {
         Memory::CallVFunc<void, mce::Color&, float, HashedString&>(9, this, color, opacity, hashedString);
