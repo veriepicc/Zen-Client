@@ -215,8 +215,19 @@
     <ClCompile Include="Client\SDK\ClientInstance.ixx" />
     <ClCompile Include="Client\SDK\Actor\Actor.ixx" />
     <ClCompile Include="Client\SDK\Actor\LocalPlayer.ixx" />
+    <ClCompile Include="Client\SDK\Components\AABBShapeComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\ActorDataFlagComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\ActorEquipmentComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\ActorGameTypeComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\ActorRotationComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\AttributesComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\MobEffectsComponent.ixx" />
     <ClCompile Include="Client\SDK\Components\MoveInputComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\OnGroundFlagComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\RenderPositionComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\RuntimeIDComponent.ixx" />
     <ClCompile Include="Client\SDK\Components\StateVectorComponent.ixx" />
+    <ClCompile Include="Client\SDK\Components\SynchedActorDataComponent.ixx" />
     <ClCompile Include="Client\SDK\Network\Packet.ixx" />
     <ClCompile Include="Client\SDK\Render\HashedString.ixx">
       <PrimaryModuleInterface>true</PrimaryModuleInterface>

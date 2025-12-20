@@ -9,6 +9,17 @@ export module Actor;
 import Paul;
 import MoveInputComponent;
 import StateVectorComponent;
+import ActorRotationComponent;
+import RenderPositionComponent;
+import AABBShapeComponent;
+import ActorDataFlagComponent;
+import ActorGameTypeComponent;
+import OnGroundFlagComponent;
+import RuntimeIDComponent;
+import ActorEquipmentComponent;
+import SynchedActorDataComponent;
+import MobEffectsComponent;
+import AttributesComponent;
 
 
 // Minecraft uses a custom entity ID with specific bit layout for versioning
@@ -72,7 +83,10 @@ struct EntityContext
     ComponentType* getComponent()
     {
         if (!isValid()) return nullptr;
-        return componentRegistry.try_get<ComponentType>(entityId);
+        
+        // For components that might be empty/tags, we cast the result of try_get 
+        // to handle cases where entt returns void* or optimized types.
+        return (ComponentType*)componentRegistry.try_get<ComponentType>(entityId);
     }
 };
 
@@ -97,6 +111,72 @@ public:
         auto& context = getEntityContext();
         return context.getComponent<StateVectorComponent>();
     }
+    
+    ActorRotationComponent* getActorRotationComponent()
+    {
+        auto& context = getEntityContext();
+        return context.getComponent<ActorRotationComponent>();
+    }
+    
+    RenderPositionComponent* getRenderPositionComponent()
+    {
+        auto& context = getEntityContext();
+        return context.getComponent<RenderPositionComponent>();
+    }
+    
+    AABBShapeComponent* getAABBShapeComponent()
+    {
+        auto& context = getEntityContext();
+        return context.getComponent<AABBShapeComponent>();
+    }
+    
+    ActorDataFlagComponent* getActorDataFlagComponent()
+    {
+        auto& context = getEntityContext();
+        return context.getComponent<ActorDataFlagComponent>();
+    }
+    
+    ActorGameTypeComponent* getActorGameTypeComponent()
+    {
+        auto& context = getEntityContext();
+        return context.getComponent<ActorGameTypeComponent>();
+    }
+    
+    OnGroundFlagComponent* getOnGroundFlagComponent()
+    {
+        auto& context = getEntityContext();
+        return context.getComponent<OnGroundFlagComponent>();
+    }
+    
+    RuntimeIDComponent* getRuntimeIDComponent()
+    {
+        auto& context = getEntityContext();
+        return context.getComponent<RuntimeIDComponent>();
+    }
+    
+    ActorEquipmentComponent* getActorEquipmentComponent()
+    {
+        auto& context = getEntityContext();
+        return context.getComponent<ActorEquipmentComponent>();
+    }
+    
+    SynchedActorDataComponent* getSynchedActorDataComponent()
+    {
+        auto& context = getEntityContext();
+        return context.getComponent<SynchedActorDataComponent>();
+    }
+    
+    MobEffectsComponent* getMobEffectsComponent()
+    {
+        auto& context = getEntityContext();
+        return context.getComponent<MobEffectsComponent>();
+    }
+    
+    AttributesComponent* getAttributesComponent()
+    {
+        auto& context = getEntityContext();
+        return context.getComponent<AttributesComponent>();
+    }
 
     Paul::Vec3f* getPosition()
     {
@@ -110,5 +190,17 @@ public:
         auto* stateVector = getStateVectorComponent();
         if (!stateVector) return nullptr;
         return &stateVector->velocity;
+    }
+    
+    Paul::Vec2f* getRotation()
+    {
+        auto* rotationComponent = getActorRotationComponent();
+        if (!rotationComponent) return nullptr;
+        return &rotationComponent->rotation;
+    }
+    
+    bool isOnGround()
+    {
+        return getOnGroundFlagComponent() != nullptr;
     }
 };
